@@ -1,12 +1,13 @@
-var { dialogueTree, world, currentGold } = gameData;
+var { dialogueTree, world, currentGold, port } = gameData;
 var currentTown = decodeURI(window.location.href).split('/')[3];
+console.log(port);
 
 var town = world.towns.find(t => t.name == currentTown);
 if (town == undefined) window.location.href = '/';
 
 function post(data, callback) {
     var xhr = new XMLHttpRequest();
-    xhr.open("POST", 'http://localhost:3000', true);
+    xhr.open("POST", 'http://localhost:' + port, true);
     xhr.setRequestHeader('Content-Type', 'application/json');
     xhr.send(JSON.stringify({
         data: data

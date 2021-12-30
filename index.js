@@ -30,6 +30,7 @@ function World() {
 
 var game = {
     gameData: {
+        port: port,
         world: new World(),
         currentGold: 1000,
         inventory: [{
