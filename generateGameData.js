@@ -16,15 +16,15 @@ const generateGameData = function(port) {
                     prompt: 'You are currently in the town of %currentTown%.',
                     options: [
                         {
-                            text: 'View my stats',
+                            text: 'View my stats.',
                             redirect: 'viewStats'
                         },
                         {
-                            text: 'View my inventory',
+                            text: 'View my inventory.',
                             redirect: 'viewInventory'
                         },
                         {
-                            text: 'View my quests',
+                            text: 'View my quests.',
                             redirect: 'viewQuests'
                         },
                         {
@@ -85,6 +85,18 @@ const generateGameData = function(port) {
             firstNPCMeet: undefined,
             fistNPCMeetTown: undefined,
             firstNPCMeetMet: false
+        },
+        synonyms: {
+            happy: ['happy', 'wonderful', 'great'],
+            fine: ['fine', 'wonderful', 'splendid', 'great', 'phenomenal', 'terrific'],
+            well: ['well', 'splendidly', 'wonderfully', 'exceptionally well', 'perfectly', 'happily'],
+            hello: ['hello', 'howdy', 'greetings', 'salutations'],
+            player: ['stranger', 'friend', 'newcomer', 'wanderer', 'adventurer'],
+            today: ['today', 'this day'],
+            bothering: ['bothering', 'pestering', 'annoying'],
+            bother: ['bother', 'pester', 'annoy'],
+            alone: ['alone', 'be'],
+            better: ['better', 'nicer', 'more likable', 'more agreeable', 'more fortuitous'],
         }
     });
 }

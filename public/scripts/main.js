@@ -1,3 +1,7 @@
+Array.prototype.randomItem = function() {
+    return this[Math.floor(Math.random() * this.length)];
+}
+
 var { dialogueTree, world, currentGold, port } = gameData;
 var currentTown = decodeURI(window.location.href).split('/')[3];
 console.log(port);
@@ -14,7 +18,15 @@ function post(data, callback) {
         data: data
     }));
     xhr.onreadystatechange = function() {
-        if (xhr.readyState == 4) callback(xhr.response);
+        if (xhr.readyState == 4) callback(xhr.response);String.prototype.capSentences = function() {
+    const delims = this.split('').filter(c => ['.','?','!'].includes(c));
+    var spl = this.split(/[\.?!]+/).filter(s => s.trim().length);
+    return spl.map((s, i) => {
+        s = s.trim();
+        if (!s.length) return '';
+        return s[0].toUpperCase() + s.slice(1) + delims[i];
+    }).join(' ').trim();
+}
     }
 }
 
@@ -50,11 +62,25 @@ if (currentPage == 'main') {
     });
 }
 
+String.prototype.capSentences = function() {
+    const delims = this.split('').filter(c => ['.','?','!'].includes(c));
+    if (!delims.length) return this;
+    var spl = this.split(/[\.?!]+/).filter(s => s.trim().length);
+    return spl.map((s, i) => {
+        s = s.trim();
+        if (!s.length) return '';
+        return s[0].toUpperCase() + s.slice(1) + delims[i];
+    }).join(' ').trim();
+}
+
 function parseForVars(line) {
     var spl = line.split('%');
     let percentParsed = spl.map((w, i) => ((i - 1) % 2 == 0) ? window[w] : w).join('');
     spl = percentParsed.split('@');
-    return spl.map((w, i) => ((i - 1) % 2 == 0) ? gameData.eventVars[w] : w).join('');
+    let atParsed = spl.map((w, i) => ((i - 1) % 2 == 0) ? gameData.eventVars[w] : w).join('');
+    spl = atParsed.split('~');
+    let tildeParsed = spl.map((w, i) => ((i - 1) % 2 == 0) ? gameData.synonyms[w].randomItem() : w).join('');
+    return tildeParsed.capSentences();
 }
 
 function handleAction(a) {
