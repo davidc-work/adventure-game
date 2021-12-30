@@ -4,7 +4,7 @@ import townNames from './townNames.js';
 
 const Town = function() {
     var x = Math.floor(Math.random() * (townNames.length - 1));
-    this.name = townNames[x];
+    this.name = townNames[x].trim();
     var pop = 20 + x % 20;
     this.people = [];
     for (var i = 0; i < pop; i++) {

@@ -77,8 +77,11 @@ function writeDialogue() {
     });
 
     if (dia.autoredirect) {
-        dialoguePage = dia.autoredirect;
-        return writeDialogue();
+        setTimeout(() => {
+            dialoguePage = dia.autoredirect;
+            writeDialogue();
+        }, 500);
+        return ;
     }
 
     var responseBox = document.getElementsByClassName('response-box')[0];
@@ -87,39 +90,32 @@ function writeDialogue() {
         var e = document.createElement('p');
         e.innerHTML = o.text;
         e.addEventListener('click', e => {
-            writePlayerLine(o.text);
-            if (o.pageRedirect) {
-                window.location.href = o.pageRedirect.replace(/([^:]\/)\/+/g, "$1");;
-                return;
-            }
-            if (o.redirect) {
-                dialoguePage = o.redirect;
-                writeDialogue();
-            }
-            if (o.action) {
-                post(o.action, res => {
-                    res = JSON.parse(res);
-                    writePlayerLine(res.msg);
-                    if (res.action) {
-                        var cmd = res.action.split(' ');
-                        switch(cmd[0]) {
-                            case 'addGold':
-                                currentGold += parseInt(cmd[1], 10);
-                                break;
-                        }
+            writePlayerLine(o.text, () => {
+                setTimeout(() => {
+                    if (o.pageRedirect) {
+                        window.location.href = o.pageRedirect.replace(/([^:]\/)\/+/g, "$1");
+                        return;
                     }
-                });
-                /*var spl = o.action.split(' ');
-                if (spl[0] == 'buyitem') {
-                    var name = spl[1];
-                    var price = spl[2];
-                    post(o.action, res => {
-                        res = JSON.parse(res);
-                        console.log(res);
-                        writePlayerLine(res.msg);
-                    });
-                }*/
-            }
+                    if (o.redirect) {
+                        dialoguePage = o.redirect;
+                        writeDialogue();
+                    }
+                    if (o.action) {
+                        post(o.action, res => {
+                            res = JSON.parse(res);
+                            writePlayerLine(res.msg);
+                            if (res.action) {
+                                var cmd = res.action.split(' ');
+                                switch(cmd[0]) {
+                                    case 'addGold':
+                                        currentGold += parseInt(cmd[1], 10);
+                                        break;
+                                }
+                            }
+                        });
+                    }
+                }, 300);
+            });            
         });
         responseBox.appendChild(e);
     });
@@ -128,19 +124,19 @@ function writeDialogue() {
     e.scrollTop = e.scrollHeight;
 }
 
-function writePlayerLine(l) {
+function writePlayerLine(l, callback = undefined) {
     var p = document.createElement('p');
     var e = document.getElementsByClassName('dialogue-box')[0];
     e.appendChild(p);
     e.scrollTop = e.scrollHeight + 24;
-    scrollInText(p, l);
+    scrollInText(p, l, 15, callback);
     p.style.color = 'red';
 }
 
-function scrollInText(e, fullText, wait = 15) {
+function scrollInText(e, fullText, wait = 15, callback = undefined) {
     var t = e.innerHTML;
     if (t != fullText) {
         e.innerHTML = fullText.slice(0, t.length + 1);
-        setTimeout(() => scrollInText(e, fullText, wait), wait);
-    }
+        setTimeout(() => scrollInText(e, fullText, wait, callback), wait);
+    } else if (callback) callback();
 }

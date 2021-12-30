@@ -135,7 +135,8 @@ function findShop(ownerName, townName) {
 }
 
 app.get('/', (req, res) => {
-    res.redirect('/' + game.gameData.world.towns[0].name);
+    //res.redirect('/' + game.gameData.world.towns[0].name);
+    res.render('startPage', game);
 });
 
 app.get('/:town', (req, res) => {
