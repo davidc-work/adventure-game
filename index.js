@@ -65,6 +65,10 @@ var game = {
                         {
                             text: 'Visit another town.',
                             redirect: 'viewTowns'
+                        },
+                        {
+                            text: '*DEMO CHEAT* Add 1000 gold.',
+                            action: 'addGold 1000'
                         }
                     ]
                 },
@@ -182,6 +186,15 @@ app.post('/', jsonParser, (req, res) => {
                     msg: 'Purchased "' + name + '" for ' + price + ' gold.'
                 });
             }
+            break;
+        case 'addGold':
+            var amount = cmd[1];
+            game.gameData.currentGold += parseInt(amount, 10);
+            res.send({
+                success: true,
+                msg: 'Added ' + amount + ' gold.',
+                action: 'addGold ' + amount
+            });
             break;
     }
 });

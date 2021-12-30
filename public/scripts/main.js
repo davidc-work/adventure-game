@@ -74,7 +74,6 @@ function writeDialogue() {
         if (currentPage == 'conversation') str = currentNPCName + ': ' + str;
         if (currentPage == 'shop') str = currentShopOwner + ': ' + str;
         scrollInText(p, str);
-        //p.innerHTML = str;
     });
 
     if (dia.autoredirect) {
@@ -98,7 +97,19 @@ function writeDialogue() {
                 writeDialogue();
             }
             if (o.action) {
-                var spl = o.action.split(' ');
+                post(o.action, res => {
+                    res = JSON.parse(res);
+                    writePlayerLine(res.msg);
+                    if (res.action) {
+                        var cmd = res.action.split(' ');
+                        switch(cmd[0]) {
+                            case 'addGold':
+                                currentGold += parseInt(cmd[1], 10);
+                                break;
+                        }
+                    }
+                });
+                /*var spl = o.action.split(' ');
                 if (spl[0] == 'buyitem') {
                     var name = spl[1];
                     var price = spl[2];
@@ -107,7 +118,7 @@ function writeDialogue() {
                         console.log(res);
                         writePlayerLine(res.msg);
                     });
-                }
+                }*/
             }
         });
         responseBox.appendChild(e);
@@ -123,7 +134,6 @@ function writePlayerLine(l) {
     e.appendChild(p);
     e.scrollTop = e.scrollHeight + 24;
     scrollInText(p, l);
-    //p.innerHTML = l;
     p.style.color = 'red';
 }
 
