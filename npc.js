@@ -21,8 +21,25 @@ NPC.prototype.generateDialogue = function() {
                     pageRedirect: '../'
                 }
             ]
+        },
+        npcFirstMeet0: {
+            prompt: 'Oh?  What about?',
+            options: [
+                {
+                    text: 'INSERT COOL STORY PROMPT HERE',
+                    redirect: 'npcFirstMeet1'
+                },
+                {
+                    text: '...nothing, nevermind',
+                    redirect: 'greetingDefault'
+                }
+            ]
         }
     }
+}
+
+NPC.prototype.addDialogueOption = function(dialogue, option) {
+    this.dialogueTree[dialogue].options.splice(0, 0, option);
 }
 
 NPC.prototype.generateGreeting = function() {

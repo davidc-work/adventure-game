@@ -6,6 +6,9 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import path from 'path';
 import Town from './town.js';
+import World from './world.js';
+import Quest from './quest.js';
+import generateGameData from './generateGameData.js';
 
 const app = express();
 const jsonParser = bodyParser.json();
@@ -17,109 +20,55 @@ app.set('view engine', 'ejs');
 const __dirname = path.resolve();
 app.use(express.static(__dirname + '/public'));
 
-function World() {
-    this.towns = [];
-    var townCount = 15 + Math.round(Math.random() * 15);
-    for (var i = 0; i < townCount; i++) {
-        var town = new Town();
-        this.towns.push(town);
-    }
-
-    return this;
-}
-
 var game = {
-    gameData: {
-        port: port,
-        world: new World(),
-        currentGold: 1000,
-        inventory: [{
-            name: 'Short Sword',
-            price: 5
-        }],
-        dialogueTree: {
-            main: {
-                inTown: {
-                    prompt: 'You are currently in the town of %currentTown%.',
-                    options: [
-                        {
-                            text: 'View my stats',
-                            redirect: 'viewStats'
-                        },
-                        {
-                            text: 'View my inventory',
-                            redirect: 'viewInventory'
-                        },
-                        {
-                            text: 'Talk to someone.',
-                            redirect: 'viewNPCS'
-                        },
-                        {
-                            text: 'Visit shops.',
-                            redirect: 'viewShops'
-                        },
-                        /*{
-                            text: 'View homes.',
-                            redirect: 'viewHomes'
-                        },*/
-                        {
-                            text: 'Visit another town.',
-                            redirect: 'viewTowns'
-                        },
-                        {
-                            text: '*DEMO CHEAT* Add 1000 gold.',
-                            action: 'addGold 1000'
-                        }
-                    ]
-                },
-                viewStats: {
-                    prompt: 'Your stats:\n Gold: %currentGold%',
-                    autoredirect: 'inTown'
-                },
-                viewInventory: {
-                    prompt: 'Your inventory:',
-                    options: []
-                },
-                viewNPCS: {
-                    prompt: 'List of NPCS:',
-                    options: []
-                },
-                viewShops: {
-                    prompt: 'List of shops:',
-                    options: []
-                },
-                viewTowns: {
-                    prompt: 'Visit another town:',
-                    options: []
-                }
-            }
-        }
-    }
+    gameData: generateGameData(port)
 }
 
-game.gameData.dialogueTree.main.viewTowns.options = game.gameData.world.towns.map(t => ({
+var gd = game.gameData;
+var dt = gd.dialogueTree;
+
+dt.main.viewTowns.options = gd.world.towns.map(t => ({
     text: 'Visit ' + t.name,
     pageRedirect: '/' + t.name
-}));
-game.gameData.dialogueTree.main.viewTowns.options.push({
+})).concat({
     text: 'Go Back',
     redirect: 'inTown'
 });
 
-function refreshInventoryList() {
-    game.gameData.dialogueTree.main.viewInventory.options = game.gameData.inventory.map(i => ({
-        text: i.name + ' (' + i.price + ')'
+function refreshGameData() {
+    gd.dialogueTree.main.viewInventory.options = gd.inventory.map(i => ({
+        text: i.name + ' (' + i.value + ')'
     }));
-    game.gameData.dialogueTree.main.viewInventory.options.push({
+    gd.dialogueTree.main.viewInventory.options.push({
+        text: 'Go Back',
+        redirect: 'inTown'
+    });
+
+    gd.dialogueTree.main.viewQuests.options = Object.keys(gd.questTree).map(q => ({
+        text: gd.questTree[q].name,
+        action: {
+            action: 'displayText',
+            str: gd.questTree[q].objective
+        }
+    })).concat({
         text: 'Go Back',
         redirect: 'inTown'
     });
 }
 
-refreshInventoryList();
+refreshGameData();
+
+var randTown = gd.world.towns.randomItem();
+var randNPC = randTown.people.randomItem();
+randNPC.addDialogueOption('greetingDefault', {
+    text: 'I need to talk to you about something...',
+    redirect: 'npcFirstMeet0'
+});
+gd.eventVars.firstNPCMeet = randNPC.name;
+gd.eventVars.firstNPCMeetTown = randTown.name;
 
 function findTown(townName) {
-    return game.gameData.world.towns.find(t => t.name == townName);
+    return gd.world.towns.find(t => t.name == townName);
 }
 
 function findNPC(npcName, townName) {
@@ -135,7 +84,7 @@ function findShop(ownerName, townName) {
 }
 
 app.get('/', (req, res) => {
-    //res.redirect('/' + game.gameData.world.towns[0].name);
+    //res.redirect('/' + gd.world.towns[0].name);
     res.render('startPage', game);
 });
 
@@ -165,36 +114,40 @@ app.get('/:town/shop/:owner', (req, res) => {
 });
 
 app.post('/', jsonParser, (req, res) => {
-    var cmd = req.body.data.split(' ');
-    switch(cmd[0]) {
+    var cmd = req.body.data;
+    switch(cmd.action) {
         case 'buyitem':
-            var name = cmd[1].replaceAll('_', ' ');
-            var price = cmd[2];
-            if (price > game.gameData.currentGold) {
+            var data = JSON.parse(cmd.data);
+            if (data.value > gd.currentGold) {
                 res.send({
                     success: false,
-                    msg: 'Not enough gold to buy "' + name + '".'
+                    msg: 'Not enough gold to buy "' + data.name + '".'
                 });
             } else {
-                game.gameData.currentGold -= price;
-                game.gameData.inventory.push({
-                    name: name,
-                    price: price
+                gd.currentGold -= data.value;
+                gd.inventory.push({
+                    name: data.name,
+                    value: data.value,
+                    type: data.type,
+                    properties: data.properties
                 });
-                refreshInventoryList();
+                refreshGameData();
                 res.send({
                     success: true,
-                    msg: 'Purchased "' + name + '" for ' + price + ' gold.'
+                    msg: 'Purchased "' + data.name + '" for ' + data.value + ' gold.'
                 });
             }
             break;
         case 'addGold':
-            var amount = cmd[1];
-            game.gameData.currentGold += parseInt(amount, 10);
+            var amount = cmd.data;
+            gd.currentGold += parseInt(amount, 10);
             res.send({
                 success: true,
                 msg: 'Added ' + amount + ' gold.',
-                action: 'addGold ' + amount
+                action: {
+                    action: 'addGold',
+                    amount: amount
+                }
             });
             break;
     }

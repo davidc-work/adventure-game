@@ -1,3 +1,5 @@
+import Item from './item.js';
+
 Array.prototype.randomItem = function() {
     return this[Math.floor(Math.random() * this.length)];
 }
@@ -29,8 +31,12 @@ Shop.prototype.generateDialogue = function() {
         browse: {
             prompt: `Here's what I got!`,
             options: this.items.map(i => ({
-                text: 'Buy ' + i.name + ' (' + i.price + ')',
-                action: 'buyitem ' + i.name.replaceAll(' ', '_') + ' ' + i.price
+                text: 'Buy ' + i.name + ' (' + i.value + ')',
+                /*serverAction: 'buyitem ' + i.name.replaceAll(' ', '_') + ' ' + i.value*/
+                serverAction: {
+                    action: 'buyitem',
+                    data: JSON.stringify(i)
+                }
             })).concat({
                 text: 'Go Back',
                 redirect: 'main'
@@ -49,18 +55,33 @@ Shop.prototype.generateItems = function() {
     var itemCount = 7 + Math.floor(Math.random() * 5);
 
     for (var i = 0; i < itemCount; i++) {
+        let name, value, type, properties; 
         if (Math.random() < 0.3) {
-            this.items.push({
+            name = 'Potion of ' + basePotions.randomItem();
+            value = 10 + Math.floor(Math.random() * 90);
+            type = 'potion';
+            properties = {
+                restoreHealth: 10
+            }
+            /*this.items.push({
                 name: 'Potion of ' + basePotions.randomItem(),
                 price: 10 + Math.floor(Math.random() * 90)
-            });
+            });*/
         } else {
             let w = baseWeapons.randomItem();
-            this.items.push({
+            name = (Math.random() < 0.7) ? w + ' of ' + weaponModifier1.randomItem() + ' ' + weaponModifier2.randomItem() : w;
+            value = 10 + Math.floor(Math.random() * 90);
+            type = 'weapon';
+            properties = {
+                dmg: 20
+            }
+            /*this.items.push({
                 name: (Math.random() < 0.7) ? w + ' of ' + weaponModifier1.randomItem() + ' ' + weaponModifier2.randomItem() : w,
                 price: 10 + Math.floor(Math.random() * 90)
-            });
+            });*/
         }
+
+        this.items.push(new Item(name, value, type, properties));
     }
 }
 

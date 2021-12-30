@@ -52,7 +52,20 @@ if (currentPage == 'main') {
 
 function parseForVars(line) {
     var spl = line.split('%');
-    return spl.map((w, i) => ((i - 1) % 2 == 0) ? window[w] : w).join('');
+    let percentParsed = spl.map((w, i) => ((i - 1) % 2 == 0) ? window[w] : w).join('');
+    spl = percentParsed.split('@');
+    return spl.map((w, i) => ((i - 1) % 2 == 0) ? gameData.eventVars[w] : w).join('');
+}
+
+function handleAction(a) {
+    switch(a.action) {
+        case 'addGold':
+            currentGold += parseInt(a.amount, 10);
+            break;
+        case 'displayText':
+            writeLine(a.str, undefined, 'white');
+            break;
+    }
 }
 
 function writeDialogue() {
@@ -61,7 +74,6 @@ function writeDialogue() {
         conversation: currentNPC ? currentNPC.dialogueTree : undefined,
         shop: currentShop ? currentShop.dialogueTree : undefined
     }
-    console.log(dialogueOptions, currentShop);
     var dia = dialogueOptions[currentPage][dialoguePage];
     
     var prompt = dia.prompt;
@@ -88,9 +100,9 @@ function writeDialogue() {
     responseBox.innerHTML = '';
     dia.options.forEach(o => {
         var e = document.createElement('p');
-        e.innerHTML = o.text;
+        e.innerHTML = parseForVars(o.text);
         e.addEventListener('click', e => {
-            writePlayerLine(o.text, () => {
+            writeLine(o.text, () => {
                 setTimeout(() => {
                     if (o.pageRedirect) {
                         window.location.href = o.pageRedirect.replace(/([^:]\/)\/+/g, "$1");
@@ -101,16 +113,15 @@ function writeDialogue() {
                         writeDialogue();
                     }
                     if (o.action) {
-                        post(o.action, res => {
+                        handleAction(o.action);
+                    }
+                    if (o.serverAction) {
+                        //console.log(o.serverAction);
+                        post(o.serverAction, res => {
                             res = JSON.parse(res);
-                            writePlayerLine(res.msg);
+                            writeLine(res.msg);
                             if (res.action) {
-                                var cmd = res.action.split(' ');
-                                switch(cmd[0]) {
-                                    case 'addGold':
-                                        currentGold += parseInt(cmd[1], 10);
-                                        break;
-                                }
+                                handleAction(res.action);
                             }
                         });
                     }
@@ -124,13 +135,13 @@ function writeDialogue() {
     e.scrollTop = e.scrollHeight;
 }
 
-function writePlayerLine(l, callback = undefined) {
+function writeLine(l, callback = undefined, color = 'red') {
     var p = document.createElement('p');
     var e = document.getElementsByClassName('dialogue-box')[0];
     e.appendChild(p);
     e.scrollTop = e.scrollHeight + 24;
-    scrollInText(p, l, 15, callback);
-    p.style.color = 'red';
+    scrollInText(p, parseForVars(l), 15, callback);
+    p.style.color = color;
 }
 
 function scrollInText(e, fullText, wait = 15, callback = undefined) {
