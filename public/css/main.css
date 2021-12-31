@@ -24,7 +24,7 @@ html, body {
 
 .response-box {
     width: 100%;
-    height: 275px;
+    height: 242px;
     border: 1px solid white;
     padding: 20px;
     box-sizing: border-box;
@@ -42,6 +42,7 @@ html, body {
 .response-box > p:hover {
     color: rgb(0, 0, 0);
     background-color: rgb(255, 255, 255);
+    transition: none !important;
 }
 
 .response-box > p::before {

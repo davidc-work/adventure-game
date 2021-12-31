@@ -8,6 +8,7 @@
     <link href="/css/main.css" rel="stylesheet" type="text/css">
 </head>
 <body>
+    <p id="current-location"> </p>
     <div class="dialogue-box"></div>
     <div class="response-box"></div>
 </body>
@@ -20,6 +21,53 @@
 </script>
 <script src="/scripts/main.js"></script>
 <script>
+    const lists = [{
+        branch: 'viewTowns',
+        entity: gameData.world.towns,
+        text: t => 'Visit ' + t.name,
+        pageRedirect: t => '/' + t.name
+    }, {
+        branch: 'viewInventory',
+        entity: gameData.inventory,
+        text: i => i.name,
+        action: i => {
+            var lines = Object.keys(i.properties).map(prop => {
+                let propSplit = prop.split('').reduce((a, b) => {
+                    return a + ((b.toLowerCase() == b) ? b : ' ' + b);
+                }, '');
+                let propCapitalized = propSplit[0].toUpperCase() + propSplit.slice(1);
+
+                return propCapitalized + ': ' + i.properties[prop].toString();
+            });
+            lines.splice(0, 0, 'Type: ' + i.type[0].toUpperCase() + i.type.slice(1));
+            lines.push('Value: ' + i.value + ' gold');
+            return {
+                action: 'displayMultipleTexts',
+                lines: lines
+            }
+        }
+    }, {
+        branch: 'viewQuests',
+        entity: Object.keys(gameData.questTree),
+        text: q => gameData.questTree[q].name,
+        action: q => ({
+            action: 'displayText',
+            str: gameData.questTree[q].objective
+        })
+    }, {
+        branch: 'viewNPCS',
+        entity: town.people,
+        text: p => 'Talk to ' + p.name,
+        pageRedirect: p => window.location.href + '/talk/' + p.name
+    }, {
+        branch: 'viewShops',
+        entity: town.shops,
+        text: s => 'Go to ' + s.owner + '\'s shop.',
+        pageRedirect: s => window.location.href + '/shop/' + s.owner
+    }];
+
+    populateDialogueTree(gameData.dialogueTree.main, lists);
+
     writeDialogue();
 </script>
 </html>

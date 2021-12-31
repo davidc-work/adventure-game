@@ -2,14 +2,6 @@ Array.prototype.randomItem = function() {
     return this[Math.floor(Math.random() * this.length)];
 }
 
-var { dialogueTree, world, currentGold, port } = gameData;
-var currentTown = decodeURI(window.location.href).split('/')[3];
-console.log(port);
-var postUrl = (port == 3000) ? 'http://localhost:3000' : 'https://sleepy-peak-05201.herokuapp.com/';
-
-var town = world.towns.find(t => t.name == currentTown);
-if (town == undefined) window.location.href = '/';
-
 function post(data, callback) {
     var xhr = new XMLHttpRequest();
     xhr.open("POST", postUrl, true);
@@ -18,69 +10,41 @@ function post(data, callback) {
         data: data
     }));
     xhr.onreadystatechange = function() {
-        if (xhr.readyState == 4) callback(xhr.response);String.prototype.capSentences = function() {
-    const delims = this.split('').filter(c => ['.','?','!'].includes(c));
-    var spl = this.split(/[\.?!]+/).filter(s => s.trim().length);
-    return spl.map((s, i) => {
-        s = s.trim();
-        if (!s.length) return '';
-        return s[0].toUpperCase() + s.slice(1) + delims[i];
-    }).join(' ').trim();
-}
+        if (xhr.readyState == 4) callback(xhr.response);
     }
 }
 
-let currentNPC, currentNPCName;
-if (currentPage == 'conversation') {
-    currentNPCName = window.location.href.split('/')[5];
-    currentNPC = town.people.find(p => p.name == currentNPCName);
-}
+var { dialogueTree, world, currentGold, port } = gameData;
+var postUrl = (port == 3000) ? 'http://localhost:3000' : 'https://sleepy-peak-05201.herokuapp.com/';
 
-let currentShop, currentShopOwner;
-if (currentPage == 'shop') {
-    currentShopOwner = window.location.href.split('/')[5];
-    currentShop = town.shops.find(s => s.owner == currentShopOwner);
-}
+var currentTown = decodeURI(window.location.href).split('/')[3];
+var town = world.towns.find(t => t.name == currentTown);
+if (town == undefined) window.location.href = '/';
+document.getElementById('current-location').innerHTML = currentTown;
 
-if (currentPage == 'main') {
-    dialogueTree.main.viewNPCS.options = town.people.map(p => ({
-        text: 'Talk to ' + p.name,
-        pageRedirect: window.location.href + '/talk/' + p.name
-    }));
-    dialogueTree.main.viewNPCS.options.push({
-        text: 'Go Back',
-        redirect: 'inTown'
-    });
-
-    dialogueTree.main.viewShops.options = town.shops.map(s => ({
-        text: 'Go to ' + s.owner + "'s shop.",
-        pageRedirect: window.location.href + '/shop/' + s.owner
-    }));
-    dialogueTree.main.viewShops.options.push({
-        text: 'Go Back',
-        redirect: 'inTown'
-    });
-}
-
-String.prototype.capSentences = function() {
-    const delims = this.split('').filter(c => ['.','?','!'].includes(c));
-    if (!delims.length) return this;
-    var spl = this.split(/[\.?!]+/).filter(s => s.trim().length);
-    return spl.map((s, i) => {
-        s = s.trim();
-        if (!s.length) return '';
-        return s[0].toUpperCase() + s.slice(1) + delims[i];
-    }).join(' ').trim();
-}
+let currentNPC, currentNPCName, currentShop, currentShopOwner;
 
 function parseForVars(line) {
-    var spl = line.split('%');
-    let percentParsed = spl.map((w, i) => ((i - 1) % 2 == 0) ? window[w] : w).join('');
-    spl = percentParsed.split('@');
-    let atParsed = spl.map((w, i) => ((i - 1) % 2 == 0) ? gameData.eventVars[w] : w).join('');
-    spl = atParsed.split('~');
-    let tildeParsed = spl.map((w, i) => ((i - 1) % 2 == 0) ? gameData.synonyms[w].randomItem() : w).join('');
-    return tildeParsed.capSentences();
+    const checks = [
+        { delim: '%', loc: window },
+        { delim: '@', loc: gameData.eventVars },
+        { delim: '~', loc: gameData.synonyms, rand: true }
+    ];
+    checks.forEach(c => {
+        var spl = line.split(c.delim);
+        line = spl.map((w, i) => {
+            if ((i - 1) % 2 != 0) return w;
+            var word = (c.rand ? c.loc[w].randomItem() : c.loc[w]).toString();
+            const last = spl[i - 1].trim();
+            const cond1 = i == 1 && spl[0].trim() == '';
+            const cond2 = ['.', '?', '!', ':'].includes(last[last.length - 1]);
+
+            if (cond1 || cond2) word = word[0].toUpperCase() + word.slice(1); 
+            return word;
+        }).join('');
+    });
+
+    return line;
 }
 
 function handleAction(a) {
@@ -91,7 +55,26 @@ function handleAction(a) {
         case 'displayText':
             writeLine(a.str, undefined, 'white');
             break;
+        case 'displayMultipleTexts':
+            a.lines.forEach(l => {
+                writeLine(l, undefined, 'white');
+            });
+            break;
     }
+}
+
+function populateDialogueTree(tree, lists) {
+    lists.forEach(l => {
+        tree[l.branch].options = l.entity.map(a => ({
+            text: l.text(a),
+            redirect: l.redirect ? l.redirect(a) : undefined,
+            pageRedirect: l.pageRedirect ? l.pageRedirect(a) : undefined,
+            action: l.action ? l.action(a) : undefined
+        })).concat(({
+            text: 'Go Back.',
+            redirect: 'inTown'
+        }));
+    });
 }
 
 function writeDialogue() {
@@ -102,17 +85,10 @@ function writeDialogue() {
     }
     var dia = dialogueOptions[currentPage][dialoguePage];
     
-    var prompt = dia.prompt;
-    if (typeof prompt == 'function') prompt = prompt();
-    var spl = prompt.split('\n');
-    spl.forEach(l => {
-        var p = document.createElement('p');
-        document.getElementsByClassName('dialogue-box')[0].appendChild(p);
-        let str = parseForVars(l);
-        if (currentPage == 'conversation') str = currentNPCName + ': ' + str;
-        if (currentPage == 'shop') str = currentShopOwner + ': ' + str;
-        scrollInText(p, str);
-    });
+    var prompt = dia.prompt.slice();
+    if (currentPage == 'conversation') prompt = currentNPCName + ': ' + prompt;
+    if (currentPage == 'shop') prompt = currentShopOwner + ': ' + prompt;
+    writeLine(prompt, undefined, 'white');
 
     if (dia.autoredirect) {
         setTimeout(() => {
@@ -128,6 +104,7 @@ function writeDialogue() {
         var e = document.createElement('p');
         e.innerHTML = parseForVars(o.text);
         e.addEventListener('click', e => {
+            if (o.redirect) responseBox.innerHTML = '';
             writeLine(o.text, () => {
                 setTimeout(() => {
                     if (o.pageRedirect) {
@@ -142,7 +119,6 @@ function writeDialogue() {
                         handleAction(o.action);
                     }
                     if (o.serverAction) {
-                        //console.log(o.serverAction);
                         post(o.serverAction, res => {
                             res = JSON.parse(res);
                             writeLine(res.msg);
@@ -162,12 +138,15 @@ function writeDialogue() {
 }
 
 function writeLine(l, callback = undefined, color = 'red') {
-    var p = document.createElement('p');
-    var e = document.getElementsByClassName('dialogue-box')[0];
-    e.appendChild(p);
-    e.scrollTop = e.scrollHeight + 24;
-    scrollInText(p, parseForVars(l), 15, callback);
-    p.style.color = color;
+    var spl = l.split('\n');
+    spl.forEach((line, i) => {
+        var p = document.createElement('p');
+        var e = document.getElementsByClassName('dialogue-box')[0];
+        e.appendChild(p);
+        e.scrollTop = e.scrollHeight + 24;
+        scrollInText(p, parseForVars(line), 15, i == 0 ? callback : undefined);
+        p.style.color = color;
+    });
 }
 
 function scrollInText(e, fullText, wait = 15, callback = undefined) {

@@ -70,7 +70,7 @@ NPC.prototype.generateGreeting = function() {
             greeting = greetWord + ', ' + greetName + '. ' + greetAddendum;
             break;
         case 'moody':
-            var greetWord = ['Bah!', 'Ugh!', 'Hmph.', '~hello~'].randomItem();
+            var greetWord = ['Bah!', 'Ugh!', 'Hmph.', '~hello~.'].randomItem();
             var greetAddendum = ['What do you want?', 'Stop ~bothering~ me.', 'Go away.', 'Leave me alone.', 'Go ~bother~ somebody else.'].randomItem();
             
             greeting = greetWord + ' ' + greetAddendum;

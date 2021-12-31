@@ -32,7 +32,6 @@ Shop.prototype.generateDialogue = function() {
             prompt: `Here's what I got!`,
             options: this.items.map(i => ({
                 text: 'Buy ' + i.name + ' (' + i.value + ')',
-                /*serverAction: 'buyitem ' + i.name.replaceAll(' ', '_') + ' ' + i.value*/
                 serverAction: {
                     action: 'buyitem',
                     data: JSON.stringify(i)
@@ -57,28 +56,22 @@ Shop.prototype.generateItems = function() {
     for (var i = 0; i < itemCount; i++) {
         let name, value, type, properties; 
         if (Math.random() < 0.3) {
+            const power = ['', 'Miniscule', 'Greater', 'Large', 'Ultimate'].randomItem();
             name = 'Potion of ' + basePotions.randomItem();
+            if (power != '') name = power + ' ' + name;
             value = 10 + Math.floor(Math.random() * 90);
             type = 'potion';
             properties = {
                 restoreHealth: 10
             }
-            /*this.items.push({
-                name: 'Potion of ' + basePotions.randomItem(),
-                price: 10 + Math.floor(Math.random() * 90)
-            });*/
         } else {
             let w = baseWeapons.randomItem();
             name = (Math.random() < 0.7) ? w + ' of ' + weaponModifier1.randomItem() + ' ' + weaponModifier2.randomItem() : w;
             value = 10 + Math.floor(Math.random() * 90);
             type = 'weapon';
             properties = {
-                dmg: 20
+                damage: 20
             }
-            /*this.items.push({
-                name: (Math.random() < 0.7) ? w + ' of ' + weaponModifier1.randomItem() + ' ' + weaponModifier2.randomItem() : w,
-                price: 10 + Math.floor(Math.random() * 90)
-            });*/
         }
 
         this.items.push(new Item(name, value, type, properties));

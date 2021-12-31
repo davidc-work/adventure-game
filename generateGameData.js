@@ -8,7 +8,7 @@ const generateGameData = function(port) {
         world: new World(),
         currentGold: 1000,
         inventory: [new Item('Short Sword', 5, 'weapon', {
-            dmg: 5
+            damage: 5
         })],
         dialogueTree: {
             main: {
@@ -17,7 +17,13 @@ const generateGameData = function(port) {
                     options: [
                         {
                             text: 'View my stats.',
-                            redirect: 'viewStats'
+                            action: {
+                                action: 'displayMultipleTexts',
+                                lines: [
+                                    'Your stats:',
+                                    'Gold: %currentGold%'
+                                ]
+                            }
                         },
                         {
                             text: 'View my inventory.',
@@ -35,10 +41,6 @@ const generateGameData = function(port) {
                             text: 'Visit shops.',
                             redirect: 'viewShops'
                         },
-                        /*{
-                            text: 'View homes.',
-                            redirect: 'viewHomes'
-                        },*/
                         {
                             text: 'Visit another town.',
                             redirect: 'viewTowns'
@@ -52,10 +54,6 @@ const generateGameData = function(port) {
                         }
                     ]
                 },
-                viewStats: {
-                    prompt: 'Your stats:\n Gold: %currentGold%',
-                    autoredirect: 'inTown'
-                },
                 viewInventory: {
                     prompt: 'Your inventory:',
                     options: []
@@ -65,7 +63,7 @@ const generateGameData = function(port) {
                     options: []
                 },
                 viewNPCS: {
-                    prompt: 'List of NPCS:',
+                    prompt: 'List of Townspeople:',
                     options: []
                 },
                 viewShops: {

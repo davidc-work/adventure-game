@@ -8,6 +8,7 @@
     <link href="/css/main.css" rel="stylesheet" type="text/css">
 </head>
 <body>
+    <p id="current-location"> </p>
     <div class="dialogue-box"></div>
     <div class="response-box"></div>
 </body>
@@ -20,6 +21,10 @@
 </script>
 <script src="/scripts/main.js"></script>
 <script>
+    currentNPCName = window.location.href.split('/')[5];
+    currentNPC = town.people.find(p => p.name == currentNPCName);
+    document.getElementById('current-location').innerHTML = currentTown + ' > Conversation > ' + currentNPCName;
+
     writeDialogue();
 </script>
 </html>

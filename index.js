@@ -27,37 +27,6 @@ var game = {
 var gd = game.gameData;
 var dt = gd.dialogueTree;
 
-dt.main.viewTowns.options = gd.world.towns.map(t => ({
-    text: 'Visit ' + t.name,
-    pageRedirect: '/' + t.name
-})).concat({
-    text: 'Go Back',
-    redirect: 'inTown'
-});
-
-function refreshGameData() {
-    gd.dialogueTree.main.viewInventory.options = gd.inventory.map(i => ({
-        text: i.name + ' (' + i.value + ')'
-    }));
-    gd.dialogueTree.main.viewInventory.options.push({
-        text: 'Go Back',
-        redirect: 'inTown'
-    });
-
-    gd.dialogueTree.main.viewQuests.options = Object.keys(gd.questTree).map(q => ({
-        text: gd.questTree[q].name,
-        action: {
-            action: 'displayText',
-            str: gd.questTree[q].objective
-        }
-    })).concat({
-        text: 'Go Back',
-        redirect: 'inTown'
-    });
-}
-
-refreshGameData();
-
 var randTown = gd.world.towns.randomItem();
 var randNPC = randTown.people.randomItem();
 randNPC.addDialogueOption('greetingDefault', {
@@ -84,7 +53,6 @@ function findShop(ownerName, townName) {
 }
 
 app.get('/', (req, res) => {
-    //res.redirect('/' + gd.world.towns[0].name);
     res.render('startPage', game);
 });
 
@@ -131,7 +99,6 @@ app.post('/', jsonParser, (req, res) => {
                     type: data.type,
                     properties: data.properties
                 });
-                refreshGameData();
                 res.send({
                     success: true,
                     msg: 'Purchased "' + data.name + '" for ' + data.value + ' gold.'
