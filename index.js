@@ -1,5 +1,10 @@
-Array.prototype.randomItem = function() {
-    return this[Math.floor(Math.random() * this.length)];
+Array.prototype.randomItem = function(dist) {
+    if (dist == undefined) return this[Math.floor(Math.random() * this.length)];
+    else {
+        let rand = Math.random();
+        for (var i = 0; i < this.length; i++) if (rand < (dist[i] || 1)) break;
+        return this[i] || this[this.length - 1];
+    }
 }
 
 import express from 'express';
@@ -26,11 +31,23 @@ var game = {
 
 var gd = game.gameData;
 var dt = gd.dialogueTree;
+var qt = gd.questTree;
+
+gd.currentQuests.push(new Quest(qt, 'gettingStarted', 1));
+//gd.currentQuests[0].setObjectiveStatus('findFirstNPC', true);
 
 var randTown = gd.world.towns.randomItem();
 var randNPC = randTown.people.randomItem();
 randNPC.addDialogueOption('greetingDefault', {
     text: 'I need to talk to you about something...',
+    serverAction: {
+        action: 'updateQuest',
+        questId: 'gettingStarted',
+        objective: {
+            id: 'findFirstNPC',
+            completed: true
+        }
+    },
     redirect: 'npcFirstMeet0'
 });
 gd.eventVars.firstNPCMeet = randNPC.name;
@@ -52,7 +69,17 @@ function findShop(ownerName, townName) {
     return town.shops.find(s => s.owner == ownerName);
 }
 
+function stringifiedGameData() {
+    return {
+        gameData: JSON.stringify(game.gameData, (key, val) => {
+            if (typeof val == 'function') return val + '';
+            return val;
+        })
+    }
+}
+
 app.get('/', (req, res) => {
+    //res.redirect('/' + gd.eventVars.firstNPCMeetTown + '/talk/' + gd.eventVars.firstNPCMeet);
     res.render('startPage', game);
 });
 
@@ -70,8 +97,8 @@ app.get('/:town/talk', (req, res) => res.redirect('/'));
 app.get('/:town/talk/:npc', (req, res) => {
     var townName = req.params.town, npcName = req.params.npc;
     if (findNPC(npcName, townName) == undefined) res.redirect('/');
-    
-    res.render('conversation', game);
+
+    res.render('conversation', stringifiedGameData());
 });
 
 app.get('/:town/shop/:owner', (req, res) => {
@@ -116,6 +143,16 @@ app.post('/', jsonParser, (req, res) => {
                     amount: amount
                 }
             });
+            break;
+        case 'updateQuest':
+            let quest = gd.currentQuests.find(q => q.questId == cmd.questId);
+            if (!quest) return ;
+            if (quest.setObjectiveStatus(cmd.objective.id, cmd.objective.completed).changed) {
+                res.send({
+                    success: true,
+                    msg: 'Quest "' + quest.title + '" has been updated.'
+                });
+            }
             break;
     }
 });

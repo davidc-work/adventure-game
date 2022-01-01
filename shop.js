@@ -4,9 +4,11 @@ Array.prototype.randomItem = function() {
     return this[Math.floor(Math.random() * this.length)];
 }
 
-const Shop = function(owner = undefined) {
-    this.generateItems();
+const Shop = function(owner = undefined, level = 1) {
     this.owner = owner;
+    this.level = level;
+    
+    this.generateItems();
 
     this.generateDialogue();
 
@@ -30,13 +32,17 @@ Shop.prototype.generateDialogue = function() {
         },
         browse: {
             prompt: `Here's what I got!`,
-            options: this.items.map(i => ({
-                text: 'Buy ' + i.name + ' (' + i.value + ')',
-                serverAction: {
-                    action: 'buyitem',
-                    data: JSON.stringify(i)
+            options: this.items.map(i => {
+                let t = 'Buy ' + i.name + ' - ' + i.value + ' gold';
+                if (i.type == 'weapon') t += ' (' + i.properties.damage + ' damage)';
+                return {
+                    text: t,
+                    serverAction: {
+                        action: 'buyitem',
+                        data: JSON.stringify(i)
+                    }
                 }
-            })).concat({
+            }).concat({
                 text: 'Go Back',
                 redirect: 'main'
             })
@@ -44,36 +50,102 @@ Shop.prototype.generateDialogue = function() {
     }
 }
 
-Shop.prototype.generateItems = function() {
-    const baseWeapons = ['Short Sword', 'Long Sword', 'Bow', 'Mace', 'Club', 'Shield', 'Spear'];
-    const weaponModifier1 = ['Incredible', 'Destructive', 'Massive', 'Powerful', 'Holy', 'Dark', 'Firey', 'Icey', 'Cursed', 'Decent', 'Sharpened', 'Expert', 'Professional'];
-    const weaponModifier2 = ['Fury', 'Decisionmaking', 'Power', 'Deception', 'Attonement', 'Whispers', 'Flames', 'Ice', 'Catastrophe', 'Prime', 'Singing', 'Slicing', 'Bludgeoning', 'Piercing'];
+Shop.prototype.potions = [{
+        name: 'Healing',
+        effect: 'restoreHealth',
+        valueMultiplier: 1,
+        baseIntensity: 10
+    }, {
+        name: 'Agility',
+        effect: 'buffSpeed',
+        valueMultiplier: 0.8,
+        baseIntensity: 1
+    }, {
+        name: 'Defense',
+        effect: 'buffDefense',
+        valueMultiplier: 1,
+        baseIntensity: 1
+    }, {
+        name: 'Destruction',
+        effect: 'buffAttack',
+        valueMultiplier: 1,
+        baseIntensity: 1
+    }
+];
 
-    const basePotions = ['Healing', 'Agility', 'Defense', 'Dexterity', 'Curse', 'Destruction', 'Enchanting'];
+Shop.prototype.potionPowerTitles = ['Miniscule', '', 'Greater', 'Large', 'Ultimate'];
+
+Shop.prototype.weapons = [{
+        name: 'Short Sword',        
+        valueMultiplier: 0.7,
+        basePower: 5
+    }, {
+        name: 'Long Sword',
+        valueMultiplier: 1,
+        basePower: 10
+    }, {
+        name: 'Bow',
+        valueMultiplier: 1.1,
+        basePower: 8
+    }, {
+        name: 'Spear',
+        valueMultiplier: 1.1,
+        basePower: 9
+    }
+];
+
+Shop.prototype.weaponModifiers = [
+    ['Incredible', 'Destructive', 'Massive', 'Powerful', 'Holy', 'Dark', 'Cursed', 'Decent', 'Sharpened', 'Expert', 'Professional'],
+    ['Fury', 'Decisionmaking', 'Power', 'Deception', 'Attonement', 'Whispers', 'Catastrophe', 'Prime', 'Singing', 'Slicing', 'Bludgeoning', 'Piercing']
+];
+
+Shop.prototype.weaponElementals = [
+    {name: 'Flaming', effect: 'burn'},
+    {name: 'Icey', effect: 'freeze'},
+    {name: 'Caustic', effect: 'poison'}
+];
+
+Shop.prototype.generateItems = function() {
+    //const baseWeapons = ['Short Sword', 'Long Sword', 'Bow', 'Mace', 'Club', 'Shield', 'Spear'];
+
+    //const basePotions = ['Healing', 'Agility', 'Defense', 'Dexterity', 'Curse', 'Destruction', 'Enchanting'];
     this.items = [];
-    var itemCount = 7 + Math.floor(Math.random() * 5);
+    var itemCount = 5 + Math.round(Math.random() * 7);
 
     for (var i = 0; i < itemCount; i++) {
-        let name, value, type, properties; 
-        if (Math.random() < 0.3) {
-            const power = ['', 'Miniscule', 'Greater', 'Large', 'Ultimate'].randomItem();
-            name = 'Potion of ' + basePotions.randomItem();
-            if (power != '') name = power + ' ' + name;
-            value = 10 + Math.floor(Math.random() * 90);
+        let name, value, type, properties = {};
+        const randMulti = Math.random() / 20 - 0.1;
+        if (Math.random() < 0.3) { //potions
             type = 'potion';
-            properties = {
-                restoreHealth: 10
-            }
-        } else {
-            let w = baseWeapons.randomItem();
-            name = (Math.random() < 0.7) ? w + ' of ' + weaponModifier1.randomItem() + ' ' + weaponModifier2.randomItem() : w;
-            value = 10 + Math.floor(Math.random() * 90);
-            type = 'weapon';
-            properties = {
-                damage: 20
-            }
-        }
+            const power = Math.round(Math.random() * this.potionPowerTitles.length);
+            const powerTitle = this.potionPowerTitles[power];
 
+            const potion = this.potions.randomItem();
+            name = 'Potion of ' + potion.name;
+            if (powerTitle != '') name = powerTitle + ' ' + name;
+            const multi = 1 + this.level / 10 + randMulti + power / 30;
+            var intensity = potion.baseIntensity * multi;
+            intensity = parseFloat(intensity.toFixed(2), 10);
+            value = Math.floor(10 * multi * potion.valueMultiplier);
+            properties[potion.effect] = intensity;
+        } else { //weapons
+            type = 'weapon';
+            const weapon = this.weapons.randomItem();
+
+            const multi = 1 + this.level / 10 + randMulti;
+            properties.damage = parseFloat((weapon.basePower * multi).toFixed(2), 10);
+
+            name = (Math.random() < 0.7) ? weapon.name + ' of ' + this.weaponModifiers[0].randomItem() + ' ' + this.weaponModifiers[1].randomItem() : weapon.name;
+            var elementalMultiplier = 1;
+            if (Math.random() < 0.5) {
+                const elemental = this.weaponElementals.randomItem();
+                name = elemental.name + ' ' + name;
+                properties[elemental.effect] = true;
+                elementalMultiplier = 1.3;
+            }
+            
+            value = Math.round(10 * multi * weapon.valueMultiplier * elementalMultiplier);
+        }
         this.items.push(new Item(name, value, type, properties));
     }
 }

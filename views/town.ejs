@@ -48,11 +48,11 @@
         }
     }, {
         branch: 'viewQuests',
-        entity: Object.keys(gameData.questTree),
-        text: q => gameData.questTree[q].name,
+        entity: gameData.currentQuests,
+        text: q => q.title,
         action: q => ({
             action: 'displayText',
-            str: gameData.questTree[q].objective
+            str: q.objectives[0].description
         })
     }, {
         branch: 'viewNPCS',

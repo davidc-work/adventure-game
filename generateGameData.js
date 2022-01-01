@@ -6,6 +6,7 @@ const generateGameData = function(port) {
     return ({
         port: port,
         world: new World(),
+        level: 0,
         currentGold: 1000,
         inventory: [new Item('Short Sword', 5, 'weapon', {
             damage: 5
@@ -77,8 +78,15 @@ const generateGameData = function(port) {
             }
         },
         questTree: {
-            gettingStarted: new Quest('Find @firstNPCMeet@', 1, 'Find and talk to @firstNPCMeet@ in @firstNPCMeetTown@.')
+            gettingStarted: {
+                title: 'Find @firstNPCMeet@',
+                objectives: [{
+                    id: 'findFirstNPC',
+                    description: 'Find and talk to @firstNPCMeet@ in @firstNPCMeetTown@.',
+                }]
+            },
         },
+        currentQuests: [],
         eventVars: {
             firstNPCMeet: undefined,
             fistNPCMeetTown: undefined,

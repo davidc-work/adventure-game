@@ -5,15 +5,16 @@ import townNames from './townNames.js';
 const Town = function() {
     var x = Math.floor(Math.random() * (townNames.length - 1));
     this.name = townNames[x].trim();
-    var pop = 20 + x % 20;
+    var pop = 15 + x % 25;
     this.people = [];
     for (var i = 0; i < pop; i++) {
         var npc = new NPC();
+        npc.townName = this.name;
         this.people.push(npc);
     }
 
     this.shops = [];
-    var shopCount = Math.round((Math.random() / 2) * pop);
+    var shopCount = 2 + Math.round((Math.random() / 10) * pop);
     var availableShopOwners = this.people.map(p => p);
     for (var i = 0; i < shopCount; i++) {
         var j = Math.floor(Math.random() * availableShopOwners.length);

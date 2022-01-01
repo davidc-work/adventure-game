@@ -1,3 +1,5 @@
+var _dialogueTransitionActive = false;
+
 Array.prototype.randomItem = function() {
     return this[Math.floor(Math.random() * this.length)];
 }
@@ -63,6 +65,30 @@ function handleAction(a) {
     }
 }
 
+function handleOption(o) {
+    if (o.pageRedirect) {
+        window.location.href = o.pageRedirect.replace(/([^:]\/)\/+/g, "$1");
+        return;
+    }
+    if (o.redirect) {
+        dialoguePage = o.redirect;
+        writeDialogue();
+    }
+    if (o.action) {
+        handleAction(o.action);
+    }
+    if (o.serverAction) {
+        post(o.serverAction, res => {
+            res = JSON.parse(res);
+            if (res.msg) writeLine(res.msg);
+            if (res.action) {
+                handleAction(res.action);
+            }
+        });
+    }
+    _dialogueTransitionActive = false;
+}
+
 function populateDialogueTree(tree, lists) {
     lists.forEach(l => {
         tree[l.branch].options = l.entity.map(a => ({
@@ -104,31 +130,18 @@ function writeDialogue() {
         var e = document.createElement('p');
         e.innerHTML = parseForVars(o.text);
         e.addEventListener('click', e => {
-            if (o.redirect) responseBox.innerHTML = '';
+            if (_dialogueTransitionActive) return ;
+            _dialogueTransitionActive = true;
+            //if (o.redirect) responseBox.innerHTML = '';
+            if (o.redirect || o.pageRedirect) {
+                Array.from(responseBox.children).forEach(p => {
+                    p.style.animation = '0.35s fade-out';
+                    p.style.animationFillMode = 'forwards';
+                });
+            }
             writeLine(o.text, () => {
-                setTimeout(() => {
-                    if (o.pageRedirect) {
-                        window.location.href = o.pageRedirect.replace(/([^:]\/)\/+/g, "$1");
-                        return;
-                    }
-                    if (o.redirect) {
-                        dialoguePage = o.redirect;
-                        writeDialogue();
-                    }
-                    if (o.action) {
-                        handleAction(o.action);
-                    }
-                    if (o.serverAction) {
-                        post(o.serverAction, res => {
-                            res = JSON.parse(res);
-                            writeLine(res.msg);
-                            if (res.action) {
-                                handleAction(res.action);
-                            }
-                        });
-                    }
-                }, 300);
-            });            
+                setTimeout(() => handleOption(o), 300);
+            });
         });
         responseBox.appendChild(e);
     });
@@ -149,10 +162,24 @@ function writeLine(l, callback = undefined, color = 'red') {
     });
 }
 
+function writeLines(lines, callback = undefined, color = 'red', i = 0) {
+    if (i >= lines.length) return callback();
+    writeLine(lines[i], () => {
+        writeLines(lines, callback, color, i + 1);
+    }, color);
+}
+
 function scrollInText(e, fullText, wait = 15, callback = undefined) {
     var t = e.innerHTML;
     if (t != fullText) {
         e.innerHTML = fullText.slice(0, t.length + 1);
         setTimeout(() => scrollInText(e, fullText, wait, callback), wait);
     } else if (callback) callback();
+}
+
+function NPCIntroduction(callback) {
+    writeLines([
+        'You begin a conversation with ' + currentNPCName + '.',
+        currentNPC.introduction
+    ], callback, 'white');
 }

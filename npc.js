@@ -2,18 +2,63 @@ import { nameByRace } from 'fantasy-name-generator';
 
 var NPC = function() {
     this.name = nameByRace('human');
+    this.generateAttributes();
     this.generatePersonality();
     this.generateDialogue();
+
+    this.generateIntroduction();
 
     return this;
 }
 
+NPC.prototype.generateIntroduction = function() {
+    if (!this.attributes) this.generateAttributes();
+    const isMale = this.attributes.gender == 'male';
+    const pronoun = isMale ? 'He' : 'She';
+    const heightAdj = this.attributes.height > 66 ? 'tall' : 'short';
+    const ageAdj = this.attributes.age < 40 ? 'younger' : 'older';
+    const man = isMale ? 'man' : 'woman';
+
+    this.introduction = pronoun +  ' is a ' + heightAdj + ', ' + ageAdj + ' ' + man + 
+        ' with ' + this.attributes.eyeColor + ' eyes and ' + this.attributes.hairColor + 
+        ' hair.';
+    switch (this.personality.generalDisposition) {
+        case 'happy': 
+            this.introduction += ' ' + pronoun + ' appears to be in a good mood.';
+            break;
+        case 'sad':
+            this.introduction += ' ' + pronoun + ' appears to be in a bad mood.';
+            break;
+        case 'moody':
+            this.introduction += ' ' + pronoun + ' appears to have no interest in talking to you.';
+            break;
+        case 'fearful':
+            this.introduction += ' ' + pronoun + ' appears to be frightened, for some reason.';
+            break;
+    }
+}
+
 NPC.prototype.generatePersonality = function() {
-    this.generalDisposition = ['happy', 'happy', 'happy', 'happy', 'sad', 'moody', 'fearful'].randomItem();
+    this.personality = {
+        generalDisposition: ['happy', 'sad', 'moody', 'fearful'].randomItem([0.6, 0.7, 0.95, 1])
+    }
+}
+
+NPC.prototype.generateAttributes = function() {
+    this.attributes = {
+        age: 18 + Math.floor(Math.random() * 62),
+        gender: Math.random() > 0.5 ? 'male' : 'female',
+        height: 60 + Math.floor(Math.random() * 14),
+        eyeColor: ['hazel', 'blue', 'gray', 'brown', 'green', 'amber'].randomItem(),
+        hairColor: ['dark', 'brown', 'blonde', 'red'].randomItem()
+    }
+
+    if (this.attributes.age > (60 - Math.random() * 10)) this.attributes.hairColor = 'white';
 }
 
 NPC.prototype.generateDialogue = function() {
     if (!this.personality) this.generatePersonality();
+    if (!this.attributes) this.generateAttributes();
     this.dialogueTree = {
         greetingDefault: {
             prompt: this.generateGreeting(),
@@ -50,7 +95,7 @@ NPC.prototype.addDialogueOption = function(dialogue, option) {
 
 NPC.prototype.generateGreeting = function() {
     let greeting;
-    switch(this.generalDisposition) {
+    switch(this.personality.generalDisposition) {
         case 'happy':
             var greetWord = ['~hello~', '~hello~ there', 'Why, ~hello~'].randomItem();
             var greetName = ['~player~'].randomItem();

@@ -13,7 +13,9 @@
     <div class="response-box"></div>
 </body>
 <script type="text/javascript">
-    var gameData = <%-JSON.stringify(gameData)%>
+    //var gameDataStrung = <%-JSON.stringify(gameData)%>
+    //console.log(gameDataStrung);
+    var gameData = <%-JSON.stringify(JSON.parse(gameData))%>
     console.log(gameData);
 
     var currentPage = 'conversation';
@@ -25,6 +27,7 @@
     currentNPC = town.people.find(p => p.name == currentNPCName);
     document.getElementById('current-location').innerHTML = currentTown + ' > Conversation > ' + currentNPCName;
 
-    writeDialogue();
+    NPCIntroduction(writeDialogue);
+    //writeDialogue();
 </script>
 </html>
