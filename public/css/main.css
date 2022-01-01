@@ -30,6 +30,7 @@ html, body {
     box-sizing: border-box;
     overflow: auto;
     user-select: none;
+    overflow-x: hidden;
 }
 
 .response-box > p {
@@ -37,7 +38,8 @@ html, body {
     font-size: 16px;
     transition: 0.25s;
     padding: 5px;
-    animation: 0.75s text-in;
+    opacity: 0;
+    /*animation: 0.75s text-in;*/
     animation-fill-mode: forwards;
     position: relative;
 }
@@ -79,7 +81,7 @@ html, body {
   @keyframes text-in {
     from {
         opacity: 0;
-        left: 20px;
+        left: 100px;
     }
     to {
         opacity: 1;

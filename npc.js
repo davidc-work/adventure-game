@@ -2,6 +2,8 @@ import { nameByRace } from 'fantasy-name-generator';
 
 var NPC = function() {
     this.name = nameByRace('human');
+    this.indexes = {};
+
     this.generateAttributes();
     this.generatePersonality();
     this.generateDialogue();
@@ -15,6 +17,8 @@ NPC.prototype.generateIntroduction = function() {
     if (!this.attributes) this.generateAttributes();
     const isMale = this.attributes.gender == 'male';
     const pronoun = isMale ? 'He' : 'She';
+    const pronoun2 = isMale ? 'Him' : 'Her';
+    const possessive = isMale ? 'His' : 'Her';
     const heightAdj = this.attributes.height > 66 ? 'tall' : 'short';
     const ageAdj = this.attributes.age < 40 ? 'younger' : 'older';
     const man = isMale ? 'man' : 'woman';
@@ -22,26 +26,33 @@ NPC.prototype.generateIntroduction = function() {
     this.introduction = pronoun +  ' is a ' + heightAdj + ', ' + ageAdj + ' ' + man + 
         ' with ' + this.attributes.eyeColor + ' eyes and ' + this.attributes.hairColor + 
         ' hair.';
-    switch (this.personality.generalDisposition) {
-        case 'happy': 
-            this.introduction += ' ' + pronoun + ' appears to be in a good mood.';
-            break;
-        case 'sad':
-            this.introduction += ' ' + pronoun + ' appears to be in a bad mood.';
-            break;
-        case 'moody':
-            this.introduction += ' ' + pronoun + ' appears to have no interest in talking to you.';
-            break;
-        case 'fearful':
-            this.introduction += ' ' + pronoun + ' appears to be frightened, for some reason.';
-            break;
-    }
+    this.introduction += ' ' + pronoun + ' ' + ['appears', 'seems'].randomItem() + ' ' + [
+        ['to be in a ~good~ mood.', 'to be in a very ~good~ mood.'].randomItem(),
+        ['to be in a ~bad~ mood.', 'to be in a very ~bad~ mood.'].randomItem(),
+        ['to have no interest in talking to you.', 'to be in a really bad mood.', 
+            'to want you to go away.', 'to be upset.', 'to be a bit moody.'].randomItem(),
+        ['to be frightened, for some reason.', 'to be frightened.', 'to be scared.',
+            'a bit on edge.', 'on edge'].randomItem()
+    ][this.indexes.mood];
+    if (Math.random() < 0.7) this.introduction = this.introduction.slice(0, -1) + ' as ' + pronoun.toLowerCase() + ' ' + [
+        ['~happily~ trods along.', '~happily~ greets you.', '~happily~ strolls through town.', 'gives you a polite nod.', 'gives you a cheerful greeting.',
+            'greets you with a big grin.', 'looks over to you.'].randomItem(),
+        ['~wistfully walks around.', '~wistfully~ walks around and sighs.', '~wistfully~ mopes about.', 'looks over to you with a look of total dismay.',
+            'glances over at you unexcitedly', 'readies ' + possessive.toLowerCase() + 'self to talk to you, although it\'s abundantly clear that ' + pronoun.toLowerCase() + '\'s not really interested',
+            'sighs and looks over at you.'].randomItem(),
+        ['angrily strides through town.', 'gives you an annoyed stare.', 'frowns when you come over to ' + pronoun2.toLowerCase() + '.', 'grunts when you comes over to ' + pronoun2.toLowerCase() + '.',
+            'takes a look at you and rolls ' + pronoun.toLowerCase() + ' eyes.'].randomItem(),
+        ['frantically paces about.', 'nervously darts ' + pronoun.toLowerCase() + ' eyes to and fro.', 'panics and looks all around.'].randomItem()
+    ][this.indexes.mood]
 }
+
+NPC.prototype.personalities = ['happy', 'sad', 'moody', 'fearful'];
 
 NPC.prototype.generatePersonality = function() {
     this.personality = {
-        generalDisposition: ['happy', 'sad', 'moody', 'fearful'].randomItem([0.6, 0.7, 0.95, 1])
+        generalDisposition: this.personalities.randomItem([0.6, 0.7, 0.95, 1])
     }
+    this.indexes.mood = this.personalities.findIndex(p => p == this.personality.generalDisposition);
 }
 
 NPC.prototype.generateAttributes = function() {
@@ -59,19 +70,29 @@ NPC.prototype.generateAttributes = function() {
 NPC.prototype.generateDialogue = function() {
     if (!this.personality) this.generatePersonality();
     if (!this.attributes) this.generateAttributes();
+
     this.dialogueTree = {
         greetingDefault: {
             prompt: this.generateGreeting(),
             options: [
                 {
                     text: 'How are you today?',
-                    redirect: 'greetingReturn'
+                    redirect: 'greetingDefault1'
                 },
                 {
                     text: 'I should go.',
                     pageRedirect: '../'
                 }
             ]
+        },
+        greetingDefault1: {
+            prompt: [
+                'I\'m doing very well today, thank you!',
+                'I\'ve been better.',
+                'What\'s it look like to you?',
+                'I don\'t want to talk right now.'
+            ][this.indexes.mood],
+            autoredirect: 'greetingDefault'
         },
         npcFirstMeet0: {
             prompt: 'Oh?  What about?',

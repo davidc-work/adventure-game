@@ -103,6 +103,12 @@ function populateDialogueTree(tree, lists) {
     });
 }
 
+function fadeInDialogue(elements, callback = undefined, i = 0) {
+    if (i >= elements.length) return callback ? callback() : undefined;
+    elements[i].style.animation = '0.5s text-in forwards';
+    setTimeout(() => fadeInDialogue(elements, callback, i + 1), 50);
+}
+
 function writeDialogue() {
     const dialogueOptions = {
         main: dialogueTree.main,
@@ -120,7 +126,7 @@ function writeDialogue() {
         setTimeout(() => {
             dialoguePage = dia.autoredirect;
             writeDialogue();
-        }, 500);
+        }, 1200);
         return ;
     }
 
@@ -145,6 +151,8 @@ function writeDialogue() {
         });
         responseBox.appendChild(e);
     });
+
+    fadeInDialogue(Array.from(responseBox.children));
 
     var e = document.getElementsByClassName('dialogue-box')[0];
     e.scrollTop = e.scrollHeight;
@@ -178,8 +186,6 @@ function scrollInText(e, fullText, wait = 15, callback = undefined) {
 }
 
 function NPCIntroduction(callback) {
-    writeLines([
-        'You begin a conversation with ' + currentNPCName + '.',
-        currentNPC.introduction
-    ], callback, 'white');
+    let l = 'You begin a conversation with ' + currentNPCName + (currentNPC.shop ? ', who owns a shop in this town.' : '.');
+    writeLines([l, currentNPC.introduction], callback, 'white');
 }

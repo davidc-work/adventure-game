@@ -94,6 +94,10 @@ const generateGameData = function(port) {
         },
         synonyms: {
             happy: ['happy', 'wonderful', 'great'],
+            happily: ['happily', 'merrily', 'joyfully', 'excitedly'],
+            wistfully: ['wistfully', 'cheerlessly', 'dolefully', 'gloomily'],
+            good: ['good', 'happy', 'nice', 'pleasurable'],
+            bad: ['bad', 'sour', 'unhappy', 'poor'],
             fine: ['fine', 'wonderful', 'splendid', 'great', 'phenomenal', 'terrific'],
             well: ['well', 'splendidly', 'wonderfully', 'exceptionally well', 'perfectly', 'happily'],
             hello: ['hello', 'howdy', 'greetings', 'salutations'],

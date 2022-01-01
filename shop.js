@@ -19,24 +19,50 @@ Shop.prototype.generateDialogue = function() {
     this.dialogueTree = {
         main: {
             prompt: 'Welcome to my shop!  Feel free to have a look around.',
-            options: [
-                {
+            options: [{
                     text: 'Browse items.',
                     redirect: 'browse'
-                },
-                {
+                }, {
                     text: 'Leave',
                     pageRedirect: '../'
                 }
             ]
         },
         browse: {
-            prompt: `Here's what I got!`,
-            options: this.items.map(i => {
-                let t = 'Buy ' + i.name + ' - ' + i.value + ' gold';
-                if (i.type == 'weapon') t += ' (' + i.properties.damage + ' damage)';
+            prompt: 'Sure thing!  What would you like to look at?',
+            options: [{
+                    text: 'Browse weapons.',
+                    redirect: 'browseWeapons'
+                }, {
+                    text: 'Browse potions.',
+                    redirect: 'browsePotions'
+                }, {
+                    text: 'Nevermind.',
+                    redirect: 'main'
+                }
+            ]
+        },
+        browseWeapons: {
+            prompt: `These are my finest weapons!  Take a look for yourself!`,
+            options: this.items.filter(i => i.type == 'weapon').map(i => {
                 return {
-                    text: t,
+                    text: 'Buy ' + i.name + ' - ' + i.value + ' gold (' + 
+                        i.properties.damage + ' damage)',
+                    serverAction: {
+                        action: 'buyitem',
+                        data: JSON.stringify(i)
+                    }
+                }
+            }).concat({
+                text: 'Go Back',
+                redirect: 'main'
+            })
+        },
+        browsePotions: {
+            prompt: `Like any of these potions?  Feel free to pick them out!`,
+            options: this.items.filter(i => i.type == 'potion').map(i => {
+                return {
+                    text: 'Buy ' + i.name + ' - ' + i.value + ' gold',
                     serverAction: {
                         action: 'buyitem',
                         data: JSON.stringify(i)
@@ -117,7 +143,7 @@ Shop.prototype.generateItems = function() {
         const randMulti = Math.random() / 20 - 0.1;
         if (Math.random() < 0.3) { //potions
             type = 'potion';
-            const power = Math.round(Math.random() * this.potionPowerTitles.length);
+            const power = Math.floor(Math.random() * this.potionPowerTitles.length);
             const powerTitle = this.potionPowerTitles[power];
 
             const potion = this.potions.randomItem();
@@ -144,7 +170,7 @@ Shop.prototype.generateItems = function() {
                 elementalMultiplier = 1.3;
             }
             
-            value = Math.round(10 * multi * weapon.valueMultiplier * elementalMultiplier);
+            value = Math.floor(10 * multi * weapon.valueMultiplier * elementalMultiplier);
         }
         this.items.push(new Item(name, value, type, properties));
     }
