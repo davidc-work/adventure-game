@@ -84,17 +84,18 @@ app.get('/', (req, res) => {
 });
 
 app.get('/map', (req, res) => {
-    res.render('map', game);
+    if (gd.currentTown) res.render('map', game);
+    else res.redirect('/');
 });
 
 app.get('/:town', (req, res) => {
     var town = req.params.town;
     if (findTown(town) == undefined) {
         res.redirect('/');
+    } else {
+        gd.currentTown = town;
+        res.render('town', game);
     }
-    gd.currentTown = town;
-    
-    res.render('town', game);
 });
 
 app.get('/:town/talk', (req, res) => res.redirect('/'));
@@ -102,17 +103,19 @@ app.get('/:town/talk', (req, res) => res.redirect('/'));
 app.get('/:town/talk/:npc', (req, res) => {
     var townName = req.params.town, npcName = req.params.npc;
     if (findNPC(npcName, townName) == undefined) res.redirect('/');
-    gd.currentTown = townName;
-
-    res.render('conversation', game);
+    else {
+        gd.currentTown = townName;
+        res.render('conversation', game);
+    }
 });
 
 app.get('/:town/shop/:owner', (req, res) => {
     var townName = req.params.town, ownerName = req.params.owner;
     if (findShop(ownerName, townName) == undefined) res.redirect('/');
-    gd.currentTown = townName;
-
-    res.render('shop', game);
+    else {
+        gd.currentTown = townName;
+        res.render('shop', game);
+    }
 });
 
 app.post('/', jsonParser, (req, res) => {

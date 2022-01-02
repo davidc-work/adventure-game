@@ -2,11 +2,13 @@ import NPC from "./npc.js";
 import Shop from "./shop.js";
 import townNames from './townNames.js';
 
-const Town = function(world) {
+const Town = function(world, takenNames) {
     this.worldWidth = world.width;
     this.worldHeight = world.height;
     var x = Math.floor(Math.random() * (townNames.length - 1));
-    this.name = townNames[x].trim();
+    let name;
+    while (takenNames.includes(name = townNames.randomItem().trim())) ;
+    this.name = name;
     var pop = 15 + x % 25;
     this.people = [];
     for (var i = 0; i < pop; i++) {

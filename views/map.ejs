@@ -105,6 +105,11 @@
 
     function createTownElements() {
         const towns = gameData.world.towns;
+        const currentTown = towns.find(t => t.name == gameData.currentTown);
+        const currentTownCoords = {
+            x: currentTown.position.x,
+            y: currentTown.position.y
+        }
         const townElements = towns.map(t => {
             const isCurrentTown = t.name == gameData.currentTown;
             var townElement = document.createElement('div');
@@ -124,10 +129,17 @@
             textContainerElement.appendChild(townNameElement);
 
             const goldElement = document.createElement('p');
-            goldElement.innerHTML = isCurrentTown ? 'Current Town' : '10 gold';
+            let cost = undefined;
+            if (isCurrentTown) goldElement.innerHTML = 'Current Town';
+            else {
+                const dist = Math.hypot(t.position.x - currentTownCoords.x, t.position.y - currentTownCoords.y);
+                cost = Math.ceil(dist / 500);
+                goldElement.innerHTML = cost + ' gold';
+            }
             textContainerElement.appendChild(goldElement);
 
             townElement.onclick = e => {
+                console.log(cost);
                 window.location.href = '/' + t.name;
             }
 
