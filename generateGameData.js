@@ -108,7 +108,7 @@ const generateGameData = function(port) {
             good: ['good', 'happy', 'nice', 'pleasurable'],
             bad: ['bad', 'sour', 'unhappy', 'poor'],
             fine: ['fine', 'wonderful', 'splendid', 'great', 'phenomenal', 'terrific'],
-            well: ['well', 'splendidly', 'wonderfully', 'exceptionally well', 'perfectly', 'happily'],
+            well: ['well', 'splendidly', 'wonderfully', 'exceptionally well', 'perfectly', 'happily', 'very well'],
             hello: ['hello', 'howdy', 'greetings', 'salutations'],
             player: ['stranger', 'friend', 'newcomer', 'wanderer', 'adventurer'],
             today: ['today', 'this day'],

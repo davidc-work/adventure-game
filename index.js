@@ -66,7 +66,7 @@ function findNPC(npcName, townName) {
 function findShop(ownerName, townName) {
     const town = findTown(townName);
     if (town == undefined) return false;
-    return town.shops.find(s => s.owner == ownerName);
+    return town.shops.find(s => s.owner.name == ownerName);
 }
 
 function stringifiedGameData() {

@@ -67,7 +67,8 @@ function handleAction(a) {
 
 function handleOption(o) {
     if (o.pageRedirect) {
-        window.location.href = o.pageRedirect.replace(/([^:]\/)\/+/g, "$1");
+        var newHref = o.pageRedirect.replace(/([^:]\/)\/+/g, "$1");
+        window.location.href = newHref;
         return;
     }
     if (o.redirect) {

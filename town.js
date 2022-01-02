@@ -2,9 +2,10 @@ import NPC from "./npc.js";
 import Shop from "./shop.js";
 import townNames from './townNames.js';
 
-const Town = function(world, takenNames) {
-    this.worldWidth = world.width;
-    this.worldHeight = world.height;
+const Town = function(world, takenNames, position) {
+    this.world = Object.assign({}, world);
+    this.world.towns = undefined;
+
     var x = Math.floor(Math.random() * (townNames.length - 1));
     let name;
     while (takenNames.includes(name = townNames.randomItem().trim())) ;
@@ -12,7 +13,7 @@ const Town = function(world, takenNames) {
     var pop = 15 + x % 25;
     this.people = [];
     for (var i = 0; i < pop; i++) {
-        var npc = new NPC();
+        var npc = new NPC(this);
         npc.townName = this.name;
         this.people.push(npc);
     }
@@ -23,16 +24,19 @@ const Town = function(world, takenNames) {
     for (var i = 0; i < shopCount; i++) {
         var j = Math.floor(Math.random() * availableShopOwners.length);
         var owner = availableShopOwners[j];
-        var shop = new Shop(owner.name);
+        var shop = new Shop(owner);
 
         owner.shop = shop;
         this.shops.push(shop);
         availableShopOwners.splice(j, 1);
     }
-
-    this.position = {
-        x: Math.floor(Math.random() * this.worldWidth),
-        y: Math.floor(Math.random() * this.worldHeight)
+    
+    if (position) this.position = position;
+    else {
+        this.position = {
+            x: Math.floor(200 + Math.random() * (this.world.width - 400)),
+            y: Math.floor(200 + Math.random() * (this.world.height - 400))
+        }
     }
 
     return this;

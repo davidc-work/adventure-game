@@ -143,10 +143,10 @@
     function createTownElements() {
         const towns = gameData.world.towns;
         const currentTown = towns.find(t => t.name == gameData.currentTown);
-        const currentTownCoords = {
+        const currentTownCoords = currentTown ? {
             x: currentTown.position.x,
             y: currentTown.position.y
-        }
+        } : { x: 0, y: 0 };
         const townElements = towns.map(t => {
             const isCurrentTown = t.name == gameData.currentTown;
             var townElement = document.createElement('div');

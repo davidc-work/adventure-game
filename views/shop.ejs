@@ -22,7 +22,7 @@
 <script src="/scripts/main.js"></script>
 <script>
     currentShopOwner = window.location.href.split('/')[5];
-    currentShop = town.shops.find(s => s.owner == currentShopOwner);
+    currentShop = town.shops.find(s => s.owner.name == currentShopOwner);
     document.getElementById('current-location').innerHTML = currentTown + ' > Shop > ' + currentShopOwner + '\'s Shop';
 
     writeDialogue();

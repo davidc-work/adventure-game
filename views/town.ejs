@@ -62,8 +62,8 @@
     }, {
         branch: 'viewShops',
         entity: town.shops,
-        text: s => 'Go to ' + s.owner + '\'s shop.',
-        pageRedirect: s => window.location.href + '/shop/' + s.owner
+        text: s => 'Go to ' + s.owner.name + '\'s shop.',
+        pageRedirect: s => window.location.href + '/shop/' + s.owner.name
     }];
 
     populateDialogueTree(gameData.dialogueTree.main, lists);

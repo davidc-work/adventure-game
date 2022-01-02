@@ -158,6 +158,7 @@ html, body {
       top: -25px;
       left: 50%;
       transform: translateX(-50%);
+      pointer-events: none;
   }
 
   #map .town p {

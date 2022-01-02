@@ -5,7 +5,8 @@ Array.prototype.randomItem = function() {
 }
 
 const Shop = function(owner = undefined, level = 1) {
-    this.owner = owner;
+    this.owner = owner ? Object.assign({}, owner) : undefined;
+    
     this.level = level;
     
     this.generateItems();
@@ -150,8 +151,7 @@ Shop.prototype.generateItems = function() {
             name = 'Potion of ' + potion.name;
             if (powerTitle != '') name = powerTitle + ' ' + name;
             const multi = 1 + this.level / 10 + randMulti + power / 30;
-            var intensity = potion.baseIntensity * multi;
-            intensity = parseFloat(intensity.toFixed(2), 10);
+            var intensity = Math.floor(potion.baseIntensity * multi);
             value = Math.floor(10 * multi * potion.valueMultiplier);
             properties[potion.effect] = intensity;
         } else { //weapons
@@ -159,7 +159,7 @@ Shop.prototype.generateItems = function() {
             const weapon = this.weapons.randomItem();
 
             const multi = 1 + this.level / 10 + randMulti;
-            properties.damage = parseFloat((weapon.basePower * multi).toFixed(2), 10);
+            properties.damage = parseInt((weapon.basePower * multi).toFixed(2), 10);
 
             name = (Math.random() < 0.7) ? weapon.name + ' of ' + this.weaponModifiers[0].randomItem() + ' ' + this.weaponModifiers[1].randomItem() : weapon.name;
             var elementalMultiplier = 1;
