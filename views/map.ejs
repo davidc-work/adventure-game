@@ -139,16 +139,11 @@
             textContainerElement.appendChild(goldElement);
 
             townElement.onclick = e => {
-                console.log(cost);
-                window.location.href = '/' + t.name;
-            }
-
-            townElement.onmouseover = e => {
-                
-            }
-
-            townElement.onmouseout = e => {
-                console.log('stopped looking at town');
+                mapContainerElement.style.animation = '0.5s fade-out forwards';
+                setTimeout(() => {
+                    console.log(cost);
+                    window.location.href = '/' + t.name;
+                }, 500);
             }
 
             return new TownElement(townElement, t);

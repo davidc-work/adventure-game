@@ -104,6 +104,18 @@ html, body {
       transform: translate(-50%, -50%);
       overflow: hidden;
       cursor: grab;
+      animation: 0.5s map-intro;
+  }
+
+  @keyframes map-intro {
+    from {
+        top: 40%;
+        opacity: 0;
+    }
+    to {
+        top: 50%;
+        opacity: 1;
+    }
   }
 
   #map-container:active {
