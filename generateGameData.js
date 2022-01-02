@@ -6,6 +6,7 @@ const generateGameData = function(port) {
     return ({
         port: port,
         world: new World(),
+        currentTown: undefined,
         level: 0,
         currentGold: 1000,
         inventory: [new Item('Short Sword', 5, 'weapon', {
@@ -43,9 +44,13 @@ const generateGameData = function(port) {
                             redirect: 'viewShops'
                         },
                         {
+                            text: 'View map.',
+                            pageRedirect: '/map'
+                        },
+                        /*{
                             text: 'Visit another town.',
                             redirect: 'viewTowns'
-                        },
+                        },*/
                         {
                             text: '*DEMO CHEAT* Add 1000 gold.',
                             serverAction: {

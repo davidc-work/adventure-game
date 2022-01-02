@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adventure Game - Town</title>
+    <link href="/css/main.css" rel="stylesheet" type="text/css">
+</head>
+<body>
+    <div id="map-container">
+        <div id="map"></div>
+    </div>
+</body>
+<script type="text/javascript">
+    var gameData = <%-JSON.stringify(gameData)%>
+    console.log(gameData);
+    var grabbingMap = false;
+    const mapContainerElement = document.getElementById('map-container');
+    const mapElement = document.getElementById('map');
+
+    mapContainerElement.onmousedown = () => grabbingMap = true;
+    document.body.onmouseup = () => grabbingMap = false;
+
+    const onResize = () => {
+        const d = (window.innerWidth > window.innerHeight) ? '90vh' : '90vw';
+        mapContainerElement.style.width = d;
+        mapContainerElement.style.height = d;
+    }
+    window.onresize = onResize;
+    onResize();
+
+    function clip() {
+        var mapX = parseInt(mapElement.style.left.slice(0, -2), 10);
+        var mapY = parseInt(mapElement.style.top.slice(0, -2), 10);
+        var max = mapElement.getBoundingClientRect().width - mapContainerElement.getBoundingClientRect().width;
+
+        mapX = Math.min(0, Math.max(-max, mapX));
+        mapY = Math.min(0, Math.max(-max, mapY));
+
+        mapElement.style.left = mapX + 'px';
+        mapElement.style.top = mapY + 'px';
+    }
+
+    const onMouseMove = e => {
+        if (!grabbingMap) return ;
+        var mapX = mapElement.style.left.slice(0, -2);
+        var mapY = mapElement.style.top.slice(0, -2);
+
+        if (mapX == '') {
+            mapX = 0, mapY = 0;
+        }
+        mapX = e.movementX + parseInt(mapX, 10);
+        mapY = e.movementY + parseInt(mapY, 10);
+
+        mapElement.style.left = mapX + 'px';
+        mapElement.style.top = mapY + 'px';
+
+        clip();
+    }
+    document.body.onmousemove = onMouseMove;
+
+    const onWheel = e => {
+        const scrollAmount = 4;
+        let sign = Math.sign(e.deltaY);
+        let prev = mapElement.style.width;
+        var s = mapElement.style.width.slice(0, -1);
+        var n = Math.min(400, Math.max(100, s - e.deltaY / scrollAmount));
+        mapElement.style.width = n + '%';
+        mapElement.style.height = n + '%';
+
+        if (mapElement.style.width == prev) return ;
+        
+        var rect = mapContainerElement.getBoundingClientRect();
+        var x = e.clientX - rect.left;
+        var y = e.clientY - rect.top;
+        
+        var l = parseInt(mapElement.style.left.slice(0, -2), 10);
+        var t = parseInt(mapElement.style.top.slice(0, -2), 10);
+        if (isNaN(l)) {
+            l = 0, t = 0;
+        }
+        mapElement.style.left = (l + sign * x / scrollAmount) + 'px';
+        mapElement.style.top = (t + sign * y / scrollAmount) + 'px';
+
+        clip();
+    }
+    mapContainerElement.onwheel = onWheel;
+
+    function TownElement(e, town) {
+        this.element = e;
+        this.town = town;
+        this.x = town.position.x;
+        this.y = town.position.y;
+
+        this.reposition();
+
+        return this;
+    }
+
+    TownElement.prototype.reposition = function(width, height) {
+        this.element.style.left = this.x / 100 + '%';
+        this.element.style.top = this.y / 100 + '%';
+    }
+
+    function createTownElements() {
+        const towns = gameData.world.towns;
+        const townElements = towns.map(t => {
+            const isCurrentTown = t.name == gameData.currentTown;
+            var townElement = document.createElement('div');
+            townElement.className = 'town';
+            mapElement.appendChild(townElement);
+
+            var img = document.createElement('img');
+            var f = isCurrentTown ? 'town-green.png' : 'town.png';
+            img.src = './img/' + f;
+            townElement.appendChild(img);
+
+            const textContainerElement = document.createElement('div');
+            townElement.appendChild(textContainerElement);
+
+            const townNameElement = document.createElement('p');
+            townNameElement.innerHTML = t.name;
+            textContainerElement.appendChild(townNameElement);
+
+            const goldElement = document.createElement('p');
+            goldElement.innerHTML = isCurrentTown ? 'Current Town' : '10 gold';
+            textContainerElement.appendChild(goldElement);
+
+            townElement.onclick = e => {
+                window.location.href = '/' + t.name;
+            }
+
+            townElement.onmouseover = e => {
+                
+            }
+
+            townElement.onmouseout = e => {
+                console.log('stopped looking at town');
+            }
+
+            return new TownElement(townElement, t);
+        });
+
+        console.log(townElements);
+    }
+
+    createTownElements();
+</script>
+</html>

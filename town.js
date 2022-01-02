@@ -2,7 +2,9 @@ import NPC from "./npc.js";
 import Shop from "./shop.js";
 import townNames from './townNames.js';
 
-const Town = function() {
+const Town = function(world) {
+    this.worldWidth = world.width;
+    this.worldHeight = world.height;
     var x = Math.floor(Math.random() * (townNames.length - 1));
     this.name = townNames[x].trim();
     var pop = 15 + x % 25;
@@ -24,6 +26,11 @@ const Town = function() {
         owner.shop = shop;
         this.shops.push(shop);
         availableShopOwners.splice(j, 1);
+    }
+
+    this.position = {
+        x: Math.floor(Math.random() * this.worldWidth),
+        y: Math.floor(Math.random() * this.worldHeight)
     }
 
     return this;
