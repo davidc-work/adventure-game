@@ -85,16 +85,20 @@ const generateGameData = function(port) {
         questTree: {
             gettingStarted: {
                 title: 'Find @firstNPCMeet@',
-                objectives: [{
-                    id: 'findFirstNPC',
-                    description: 'Find and talk to @firstNPCMeet@ in @firstNPCMeetTown@.',
+                objectives: [gd => {
+                    return {
+                        id: 'findFirstNPC',
+                        description: 'Find and talk to @firstNPCMeet@ in @firstNPCMeetTown@.',
+                        questMarkerType: 'town',
+                        questMarkerLocation: gd.eventVars.firstNPCMeetTown
+                    }
                 }]
-            },
+            }
         },
         currentQuests: [],
         eventVars: {
             firstNPCMeet: undefined,
-            fistNPCMeetTown: undefined,
+            firstNPCMeetTown: undefined,
             firstNPCMeetMet: false
         },
         synonyms: {

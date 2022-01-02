@@ -16,11 +16,41 @@
     var gameData = <%-JSON.stringify(gameData)%>
     console.log(gameData);
     var grabbingMap = false;
+    let dx = 0, dy = 0, lastTime = new Date();
+    let animationFrame;
     const mapContainerElement = document.getElementById('map-container');
     const mapElement = document.getElementById('map');
 
+    const questTowns = gameData.currentQuests.filter(q => !q.completed && q.currentQuestMarker.type == 'town')
+        .map(q => q.currentQuestMarker.location);
+    console.log(questTowns);
+
+    function throwMap(v, realMapX, realMapY) {
+        if ((Math.abs(v.x) < 0.01 && Math.abs(v.y) < 0.01) || grabbingMap) return ;
+        realMapX += v.x;
+        realMapY += v.y;
+        mapElement.style.left = realMapX + 'px';
+        mapElement.style.top =  realMapY + 'px';
+        clip();
+        v.x *= 0.95;
+        v.y *= 0.95;
+        animationFrame = requestAnimationFrame(() => throwMap(v, realMapX, realMapY));
+    }
+
     mapContainerElement.onmousedown = () => grabbingMap = true;
-    document.body.onmouseup = () => grabbingMap = false;
+    document.body.onmouseup = e => {
+        grabbingMap = false;
+        var mapX = parseInt(mapElement.style.left.slice(0, -2), 10);
+        var mapY = parseInt(mapElement.style.top.slice(0, -2), 10);
+        if (new Date() - lastTime > 100) {
+            dx = 0, dy = 0;
+        }
+        throwMap({
+            x: dx,
+            y: dy
+        }, mapX, mapY);
+        dx = 0, dy = 0;
+    }
 
     const onResize = () => {
         const d = (window.innerWidth > window.innerHeight) ? '90vh' : '90vw';
@@ -44,14 +74,16 @@
 
     const onMouseMove = e => {
         if (!grabbingMap) return ;
+        lastTime = new Date();
         var mapX = mapElement.style.left.slice(0, -2);
         var mapY = mapElement.style.top.slice(0, -2);
 
         if (mapX == '') {
             mapX = 0, mapY = 0;
         }
-        mapX = e.movementX + parseInt(mapX, 10);
-        mapY = e.movementY + parseInt(mapY, 10);
+        dx = e.movementX, dy = e.movementY;
+        mapX = dx + parseInt(mapX, 10);
+        mapY = dy + parseInt(mapY, 10);
 
         mapElement.style.left = mapX + 'px';
         mapElement.style.top = mapY + 'px';
@@ -65,7 +97,8 @@
         let sign = Math.sign(e.deltaY);
         let prev = mapElement.style.width;
         var s = mapElement.style.width.slice(0, -1);
-        var n = Math.min(400, Math.max(100, s - e.deltaY / scrollAmount));
+        var scroll = sign * 100;
+        var n = Math.min(400, Math.max(100, s - scroll / scrollAmount));
         mapElement.style.width = n + '%';
         mapElement.style.height = n + '%';
 
@@ -84,6 +117,10 @@
         mapElement.style.top = (t + sign * y / scrollAmount) + 'px';
 
         clip();
+        if (animationFrame) {
+            cancelAnimationFrame(animationFrame);
+            animationFrame = undefined;
+        }
     }
     mapContainerElement.onwheel = onWheel;
 
@@ -118,6 +155,8 @@
 
             var img = document.createElement('img');
             var f = isCurrentTown ? 'town-green.png' : 'town.png';
+            if (questTowns.includes(t.name)) f = 'town-blue.png';
+
             img.src = './img/' + f;
             townElement.appendChild(img);
 
@@ -137,6 +176,8 @@
                 goldElement.innerHTML = cost + ' gold';
             }
             textContainerElement.appendChild(goldElement);
+
+            townElement.onmousedown = e => e.stopPropagation();
 
             townElement.onclick = e => {
                 mapContainerElement.style.animation = '0.5s fade-out forwards';

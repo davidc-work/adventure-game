@@ -33,9 +33,6 @@ var gd = game.gameData;
 var dt = gd.dialogueTree;
 var qt = gd.questTree;
 
-gd.currentQuests.push(new Quest(qt, 'gettingStarted', 1));
-//gd.currentQuests[0].setObjectiveStatus('findFirstNPC', true);
-
 var randTown = gd.world.towns.randomItem();
 var randNPC = randTown.people.randomItem();
 randNPC.addDialogueOption('greetingDefault', {
@@ -52,6 +49,9 @@ randNPC.addDialogueOption('greetingDefault', {
 });
 gd.eventVars.firstNPCMeet = randNPC.name;
 gd.eventVars.firstNPCMeetTown = randTown.name;
+
+gd.currentQuests.push(new Quest(gd, 'gettingStarted', 1));
+//gd.currentQuests[0].setObjectiveStatus('findFirstNPC', true);
 
 function findTown(townName) {
     return gd.world.towns.find(t => t.name == townName);

@@ -48,7 +48,7 @@
         }
     }, {
         branch: 'viewQuests',
-        entity: gameData.currentQuests,
+        entity: gameData.currentQuests.filter(q => !q.completed),
         text: q => q.title,
         action: q => ({
             action: 'displayText',
