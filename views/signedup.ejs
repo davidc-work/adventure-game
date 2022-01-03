@@ -18,11 +18,14 @@
     <p id="display">You will be redirected in 3 seconds...</p>
 </body>
 <script>
-    var x = 4;
-    var interval = setInterval(() => {
-        x--;
-        if (x == 0) window.location.href = '/';
+    var x = 10;
+    var interval = setInterval(() => {        
+        if (x == 0) {
+            window.location.href = '/';
+            return ;
+        }
         document.getElementById('display').innerHTML = 'You will be redirected in ' + x + ' seconds...';
+        x--;
     }, 1000);
 </script>
 </html>
