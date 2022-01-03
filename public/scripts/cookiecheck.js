@@ -3,8 +3,12 @@ function getCookie(name){
         return c.trim().startsWith(name + '=');
     });
 }
+var endParam = window.location.href.split('/').slice(-1)[0];
+var isAccountPage = ['login', 'signup', 'loggedin', 'signedup'].includes(endParam);
 
-if (!getCookie('sessionHash')) window.location.href = '/login';
+if (!getCookie('sessionHash')) {
+    if (!isAccountPage) window.location.href = '/login';
+}
 else {
-    
+    if (isAccountPage) window.location.href = '/';
 }
