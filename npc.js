@@ -1,19 +1,31 @@
 import { nameByRace } from 'fantasy-name-generator';
 
-var NPC = function(town) {
-    this.town = Object.assign({}, town);
-    this.town.people = undefined;  //stringify can't handle reference loops
+let _town;
+
+var NPC = function(town, family) {
+    _town = town;
+    //this.town = Object.assign({}, town);
+    //this.town.people = undefined;
+    this.family = family;
+    this.familyName = family.name;
 
     this.name = nameByRace('human');
+    this.fullName = this.name + ' ' + this.familyName;
     this.indexes = {};
 
-    this.generateAttributes();
-    this.generatePersonality();
-    this.generateDialogue();
-
-    this.generateIntroduction();
+    this.generateTraits();
 
     return this;
+}
+
+NPC.prototype.generateTraits = function() {
+    this.generateAttributes();
+    this.generatePersonality();
+    this.generateIntroduction();
+}
+
+NPC.prototype.generateSecondary = function() {
+    this.generateDialogue();
 }
 
 NPC.prototype.generateIntroduction = function() {
@@ -40,7 +52,7 @@ NPC.prototype.generateIntroduction = function() {
     if (Math.random() < 0.7) this.introduction = this.introduction.slice(0, -1) + ' as ' + pronoun.toLowerCase() + ' ' + [
         ['~happily~ trods along.', '~happily~ greets you.', '~happily~ strolls through town.', 'gives you a polite nod.', 'gives you a cheerful greeting.',
             'greets you with a big grin.', 'looks over to you.'].randomItem(),
-        ['~wistfully walks around.', '~wistfully~ walks around and sighs.', '~wistfully~ mopes about.', 'looks over to you with a look of total dismay.',
+        ['~wistfully~ walks around.', '~wistfully~ walks around and sighs.', '~wistfully~ mopes about.', 'looks over to you with a look of total dismay.',
             'glances over at you unexcitedly', 'readies ' + possessive.toLowerCase() + 'self to talk to you, although it\'s abundantly clear that ' + pronoun.toLowerCase() + '\'s not really interested',
             'sighs and looks over at you.'].randomItem(),
         ['angrily strides through town.', 'gives you an annoyed stare.', 'frowns as you walk over to ' + pronoun2.toLowerCase() + '.', 'grunts when you comes over to ' + pronoun2.toLowerCase() + '.',
@@ -88,6 +100,10 @@ NPC.prototype.generateDialogue = function() {
                     redirect: 'townInfo1'
                 },
                 {
+                    text: 'Tell me about your family.',
+                    redirect: 'familyInfo1'
+                },
+                {
                     text: 'I should go.',
                     pageRedirect: '../'
                 }
@@ -114,6 +130,10 @@ NPC.prototype.generateDialogue = function() {
             ][this.indexes.mood],
             autoredirect: 'greetingDefault'
         },
+        familyInfo1: {
+            prompt: this.generateFamilyInfo(),
+            autoredirect: 'greetingDefault'
+        },
         npcFirstMeet0: {
             prompt: 'Oh?  What about?',
             options: [
@@ -134,7 +154,7 @@ NPC.prototype.addDialogueOption = function(dialogue, option) {
     this.dialogueTree[dialogue].options.splice(0, 0, option);
 }
 
-NPC.prototype.generateTimeIntroduction = function(townName) {
+NPC.prototype.generateTimeIntroduction = function() {
     var timeSpentRelative = this.attributes.timeLivedInTown / this.attributes.age;
     var timeSpent = timeSpentRelative == 1 ? 'all' : 
         timeSpentRelative > 0.8 ? 'most' : 
@@ -191,6 +211,47 @@ NPC.prototype.generateGreeting = function() {
     }
 
     return greeting;
+}
+
+NPC.prototype.generateFamilyInfo = function() {
+    var family = this.getFamily();
+    var dialogue = '';
+    if (family.spouse) {
+        var spouseTerm = family.spouse.attributes.gender == 'male' ? 'husband' : 'wife';
+        dialogue += 'My ' + spouseTerm + ' is ' + family.spouse.fullName + '. ';
+    } else dialogue += 'I have no spouse. ';
+    if (family.parents.length) {
+        dialogue += 'My ' + ((family.parents.length == 1) ? 'singular parent, ' + family.parents[0].name + ', lives ' : 
+            'two parents, ' + family.parents[0].name + ' and ' + family.parents[1].name + ', live ') + 'here in %currentTown%. ';
+    } else dialogue += 'I have no parents currently living in %currentTown%. ';
+    if (family.siblings.length) {
+        var lastSib = family.siblings[family.siblings.length - 1];
+        var sibStr = family.siblings.length > 1 ? family.siblings.length + ' siblings' : 'one sibling';
+        var allSibs = family.siblings.length == 1 ? family.siblings[0].name : (family.siblings.slice(0, -1).map(s => s.name).join(', ').slice(0, -1) + ' and ' + lastSib.name);
+        dialogue += 'I also have ' + sibStr + ', ' + allSibs + ', currently living here. ';    
+    } else dialogue += 'I also have no siblings currently living here. ';
+    if (family.children.length) {
+        var lastChild = family.children[family.children.length - 1];
+        var childrenStr = family.children.length > 1 ? family.children.length + ' children' : 'one child';
+        var allChildren = family.children.length == 1 ? family.children[0].name : (family.children.slice(0, -1).map(c => c.name).join(', ').slice(0, -1) + ' and ' + lastChild.name);
+        dialogue += 'Lastly, I have ' + childrenStr + ', ' + allChildren + '.';
+    } else dialogue += 'Lastly, I have no children.';
+
+    return dialogue;
+}
+
+NPC.prototype.getFamily = function() {
+    var spouse = this.spouse ? _town.people.filter(p => p.fullName == this.spouse)[0] : undefined;
+    var parents = this.parents ? _town.people.filter(p => this.parents.includes(p.fullName)) : [];
+    var siblings = this.siblings ? _town.people.filter(p => this.siblings.includes(p.fullName)) : [];
+    var children = this.children ? _town.people.filter(p => this.children.includes(p.fullName)): [];
+    
+    return {
+        spouse: spouse,
+        parents: parents,
+        siblings: siblings,
+        children: children
+    }
 }
 
 export default NPC;

@@ -7,6 +7,7 @@ const generateGameData = function(port) {
         port: port,
         world: new World(),
         currentTown: undefined,
+        currentYear: 1000,
         level: 0,
         currentGold: 1000,
         inventory: [new Item('Short Sword', 5, 'weapon', {

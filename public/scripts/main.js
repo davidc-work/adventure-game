@@ -120,8 +120,8 @@ function writeDialogue() {
     var dia = dialogueOptions[currentPage][dialoguePage];
     
     var prompt = dia.prompt.slice();
-    if (currentPage == 'conversation') prompt = currentNPCName + ': ' + prompt;
-    if (currentPage == 'shop') prompt = currentShopOwner + ': ' + prompt;
+    if (currentPage == 'conversation') prompt = currentNPC.name + ': ' + prompt;
+    if (currentPage == 'shop') prompt = currentShop.owner.name + ': ' + prompt;
     writeLine(prompt, undefined, 'white');
 
     if (dia.autoredirect) {

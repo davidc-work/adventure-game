@@ -60,13 +60,13 @@ function findTown(townName) {
 function findNPC(npcName, townName) {
     const town = findTown(townName);
     if (town == undefined) return false;
-    return town.people.find(p => p.name == npcName);
+    return town.people.find(p => p.fullName == npcName);
 }
 
 function findShop(ownerName, townName) {
     const town = findTown(townName);
     if (town == undefined) return false;
-    return town.shops.find(s => s.owner.name == ownerName);
+    return town.shops.find(s => s.owner.fullName == ownerName);
 }
 
 function stringifiedGameData() {

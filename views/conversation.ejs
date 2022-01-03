@@ -23,8 +23,8 @@
 </script>
 <script src="/scripts/main.js"></script>
 <script>
-    currentNPCName = window.location.href.split('/')[5];
-    currentNPC = town.people.find(p => p.name == currentNPCName);
+    currentNPCName = decodeURI(window.location.href.split('/')[5]);
+    currentNPC = town.people.find(p => p.fullName == currentNPCName);
     document.getElementById('current-location').innerHTML = currentTown + ' > Conversation > ' + currentNPCName;
 
     NPCIntroduction(writeDialogue);

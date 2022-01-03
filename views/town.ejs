@@ -56,14 +56,20 @@
         })
     }, {
         branch: 'viewNPCS',
-        entity: town.people,
-        text: p => 'Talk to ' + p.name,
-        pageRedirect: p => window.location.href + '/talk/' + p.name
+        entity: town.people.sort((a, b) => {
+            a = a.name, b = b.name;
+            return (a < b) ? -1 : (a > b) ? 1 : 0;
+        }),
+        text: p => 'Talk to ' + p.fullName,
+        pageRedirect: p => window.location.href + '/talk/' + p.fullName
     }, {
         branch: 'viewShops',
-        entity: town.shops,
-        text: s => 'Go to ' + s.owner.name + '\'s shop.',
-        pageRedirect: s => window.location.href + '/shop/' + s.owner.name
+        entity: town.shops.sort((a, b) => {
+            a = a.owner.name, b = b.owner.name;
+            return (a < b) ? -1 : (a > b) ? 1 : 0;
+        }),
+        text: s => 'Go to ' + s.owner.fullName + '\'s shop.',
+        pageRedirect: s => window.location.href + '/shop/' + s.owner.fullName
     }];
 
     populateDialogueTree(gameData.dialogueTree.main, lists);
