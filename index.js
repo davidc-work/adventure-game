@@ -43,10 +43,6 @@ function hash(a) {
     return crypto.createHash('md5').update(a).digest('hex')
 }
 
-function generateSessionString() {
-    return new Array(64).fill(undefined).map(c => String.fromCharCode(65 + Math.floor(Math.random() * 57))).join('');
-}
-
 function createAccount(accounts, username, password) {
     if (accounts.find(a => a.username == username)) {
         return {
@@ -63,9 +59,14 @@ function createAccount(accounts, username, password) {
 }
 
 function findAccount(username, password) {
-    var a = accounts.find(a => a.password == password);
+    var a = findAccountFromHash(password);
     if (!a) return undefined;
     return (a.username == username) ? a : undefined;
+}
+
+function findAccountFromHash(hash) {
+    if (hash == undefined) return undefined;
+    return accounts.find(a => a.password == hash);
 }
 
 var accounts = getAccounts();
@@ -127,25 +128,26 @@ function findShop(ownerName, townName) {
     return town.shops.find(s => s.owner.fullName == ownerName);
 }
 
-function stringifiedGameData() {
-    return {
-        gameData: JSON.stringify(game.gameData, (key, val) => {
-            if (typeof val == 'function') return val + '';
-            return val;
-        })
-    }
+function getAccount(req, res, redirect = true) {
+    var acc = findAccountFromHash(req.cookies.sessionHash);
+    if (!acc && redirect) res.redirect('/login');
+    else return acc;
 }
 
 app.get('/', (req, res) => {
-    //res.redirect('/' + gd.eventVars.firstNPCMeetTown + '/talk/' + gd.eventVars.firstNPCMeet);
+    var acc = getAccount(req, res);
+    if (!acc) return ;
+
     res.render('startPage', game);
 });
 
 app.get('/signup', (req, res) => {
-    res.render('signup', game);
+    if (getAccount(req, res, false)) return res.redirect('/');
+    else res.render('signup', game);
 });
 
 app.post("/signedup", (req,res) => {
+    if (getAccount(req, res, false)) return res.redirect('/');
     const user = req.body.username;
     const password = req.body.password;
     var status = createAccount(accounts, user, password);
@@ -159,10 +161,12 @@ app.post("/signedup", (req,res) => {
 });
 
 app.get('/login', (req, res) => {
+    if (getAccount(req, res, false)) return res.redirect('/');
     res.render('login', game);
 });
 
 app.post("/loggedin", (req,res) => {
+    if (getAccount(req, res, false)) return res.redirect('/');
     const user = req.body.username;
     const password = req.body.password;
     const hashPassword = hash(password);
@@ -177,6 +181,9 @@ app.post("/loggedin", (req,res) => {
 });
 
 app.get('/map', (req, res) => {
+    var acc = getAccount(req, res);
+    if (!acc) return ;
+
     if (gd.currentTown) res.render('map', game);
     else res.redirect('/');
 });
@@ -190,6 +197,9 @@ app.get('/battle', (req, res) => res.redirect('/'));
 });*/
 
 app.get('/battle/:enemy', (req, res) => {
+    var acc = getAccount(req, res);
+    if (!acc) return ;
+
     if (gd.currentTown && gd.travelToTown) {
         gd.inBattle = true;
         gd.currentEnemy = req.params.enemy;
@@ -198,6 +208,9 @@ app.get('/battle/:enemy', (req, res) => {
 });
 
 app.get('/travel/:town', (req, res) => {
+    var acc = getAccount(req, res);
+    if (!acc) return ;
+
     if (gd.currentTown) {
         gd.travelToTown = req.params.town;
         res.render('travel', game);
@@ -205,7 +218,9 @@ app.get('/travel/:town', (req, res) => {
 });
 
 app.get('/:town', (req, res) => {
-    console.log(req.cookies);
+    var acc = getAccount(req, res);
+    if (!acc) return ;
+
     var town = req.params.town;
     if (findTown(town) == undefined) {
         res.redirect('/');
@@ -218,6 +233,9 @@ app.get('/:town', (req, res) => {
 app.get('/:town/talk', (req, res) => res.redirect('/'));
 
 app.get('/:town/talk/:npc', (req, res) => {
+    var acc = getAccount(req, res);
+    if (!acc) return ;
+
     var townName = req.params.town, npcName = req.params.npc;
     if (findNPC(npcName, townName) == undefined) res.redirect('/');
     else {
@@ -227,6 +245,9 @@ app.get('/:town/talk/:npc', (req, res) => {
 });
 
 app.get('/:town/shop/:owner', (req, res) => {
+    var acc = getAccount(req, res);
+    if (!acc) return ;
+
     var townName = req.params.town, ownerName = req.params.owner;
     if (findShop(ownerName, townName) == undefined) res.redirect('/');
     else {
@@ -236,6 +257,9 @@ app.get('/:town/shop/:owner', (req, res) => {
 });
 
 app.post('/', jsonParser, (req, res) => {
+    var acc = getAccount(req, res);
+    if (!acc) return ;
+
     var cmd = req.body.data;
     switch(cmd.action) {
         case 'buyitem':

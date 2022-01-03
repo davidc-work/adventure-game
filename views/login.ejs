@@ -84,7 +84,6 @@
         }
     </style>
 </head>
-<script src="/scripts/cookiecheck.js"></script>
 <body>
     <form action="/loggedin" method="POST">
         <p>Log In</p>
@@ -95,6 +94,21 @@
     </form>
 </body>
 <script>
+    function getCookie(name){
+        return document.cookie.split(';').some(c => {
+            return c.trim().startsWith(name + '=');
+        });
+}
+    function deleteCookie(name, path, domain) {
+        if(getCookie(name)) {
+            document.cookie = name + "=" +
+            ((path) ? ";path=" + path: "")+
+            ((domain)? ";domain=" + domain: "") +
+            ";expires=Thu, 01 Jan 1970 00:00:01 GMT";
+        }
+    }
+    deleteCookie('sessionHash');
+
     const usernameElement = document.getElementById('username'), 
         passwordElement = document.getElementById('password');
     function check(e) {
