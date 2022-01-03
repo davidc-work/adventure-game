@@ -74,7 +74,6 @@ function handleAction(a) {
             });
             break;
         case 'logout':
-            deleteCookie('sessionHash')
             window.location.href = '/login';
             break;
     }
