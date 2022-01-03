@@ -30,6 +30,7 @@ button {
     animation-fill-mode: forwards;
     animation-delay: 2s;
     position: absolute;
+    z-index: 3;
 }
 
 @keyframes fade-out {
