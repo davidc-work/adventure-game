@@ -98,7 +98,7 @@
         return document.cookie.split(';').some(c => {
             return c.trim().startsWith(name + '=');
         });
-}
+    }
     function deleteCookie(name, path, domain) {
         if(getCookie(name)) {
             document.cookie = name + "=" +

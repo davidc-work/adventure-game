@@ -51,6 +51,12 @@ function parseForVars(line) {
     return line;
 }
 
+function getCookie(name){
+    return document.cookie.split(';').some(c => {
+        return c.trim().startsWith(name + '=');
+    });
+}
+
 function deleteCookie( name, path, domain ) {
     if( getCookie( name ) ) {
       document.cookie = name + "=" +
@@ -74,6 +80,7 @@ function handleAction(a) {
             });
             break;
         case 'logout':
+            deleteCookie('sessionHash')
             window.location.href = '/login';
             break;
     }
