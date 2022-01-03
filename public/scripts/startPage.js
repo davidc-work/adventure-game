@@ -46,5 +46,6 @@ function redirect() {
 }
 
 showAllTextsRecursive(3000, () => {
-    redirect();
+    document.getElementsByTagName('video')[0].style.opacity = 0;
+    setTimeout(redirect, 1000);
 });
