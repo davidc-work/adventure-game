@@ -7,9 +7,18 @@ const generateGameData = function(port) {
         port: port,
         world: new World(),
         currentTown: undefined,
+        travelToTown: undefined,
+        currentEnemy: undefined,
+        inBattle: false,
         currentYear: 1000,
         level: 0,
         currentGold: 1000,
+        playerStats: {
+            health: 50,
+            attack: 10,
+            defense: 10,
+            speed: 10
+        },
         inventory: [new Item('Short Sword', 5, 'weapon', {
             damage: 5
         })],
@@ -79,6 +88,16 @@ const generateGameData = function(port) {
                 },
                 viewTowns: {
                     prompt: 'Visit another town:',
+                    options: []
+                }
+            },
+            travel: {
+                success: {
+                    prompt: 'Your trip is uneventful, and you arrive unharmed.',
+                    options: []
+                },
+                attacked: {
+                    prompt: 'You are attacked!',
                     options: []
                 }
             }

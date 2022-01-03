@@ -20,12 +20,13 @@ var { dialogueTree, world, currentGold, port } = gameData;
 //var postUrl = (port == 3000) ? 'http://localhost:3000' : 'https://sleepy-peak-05201.herokuapp.com/';
 var postUrl = window.location.protocol + '//' + window.location.host;
 
-var currentTown = decodeURI(window.location.href).split('/')[3];
+//var currentTown = decodeURI(window.location.href).split('/')[3];
+var currentTown = gameData.currentTown;
 var town = world.towns.find(t => t.name == currentTown);
 if (town == undefined) window.location.href = '/';
 document.getElementById('current-location').innerHTML = currentTown;
 
-let currentNPC, currentNPCName, currentShop, currentShopOwner;
+let currentNPC, currentNPCName, currentShop, currentShopOwner, travelTo;
 
 function parseForVars(line) {
     const checks = [
@@ -111,11 +112,14 @@ function fadeInDialogue(elements, callback = undefined, i = 0) {
     setTimeout(() => fadeInDialogue(elements, callback, i + 1), 50);
 }
 
-function writeDialogue() {
+function writeDialogue(d) {
+    if (d) dialoguePage = d;
+    
     const dialogueOptions = {
         main: dialogueTree.main,
         conversation: currentNPC ? currentNPC.dialogueTree : undefined,
-        shop: currentShop ? currentShop.dialogueTree : undefined
+        shop: currentShop ? currentShop.dialogueTree : undefined,
+        travel: travelTo ? dialogueTree.travel : undefined
     }
     var dia = dialogueOptions[currentPage][dialoguePage];
     

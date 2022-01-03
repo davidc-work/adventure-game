@@ -88,6 +88,29 @@ app.get('/map', (req, res) => {
     else res.redirect('/');
 });
 
+app.get('/travel', (req, res) => res.redirect('/'));
+
+app.get('/battle', (req, res) => res.redirect('/'));
+
+/*app.get('/restart', function (req, res, next) {
+    process.exit(1);
+});*/
+
+app.get('/battle/:enemy', (req, res) => {
+    if (gd.currentTown && gd.travelToTown) {
+        gd.inBattle = true;
+        gd.currentEnemy = req.params.enemy;
+        res.render('battle', game);
+    } else res.redirect('/');
+});
+
+app.get('/travel/:town', (req, res) => {
+    if (gd.currentTown) {
+        gd.travelToTown = req.params.town;
+        res.render('travel', game);
+    } else res.redirect('/');
+});
+
 app.get('/:town', (req, res) => {
     var town = req.params.town;
     if (findTown(town) == undefined) {

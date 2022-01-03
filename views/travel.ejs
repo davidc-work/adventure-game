@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adventure Game - Travel</title>
+    <link href="/css/main.css" rel="stylesheet" type="text/css">
+</head>
+<body>
+    <p id="current-location"> </p>
+    <div class="dialogue-box"></div>
+    <div class="response-box"></div>
+</body>
+<script type="text/javascript">
+    var gameData = <%-JSON.stringify(gameData)%>
+    console.log(gameData);
+    
+    var currentPage = 'travel';
+    var dialoguePage = 'main';
+</script>
+<script src="/scripts/main.js"></script>
+<script>
+    travelTo = decodeURI(window.location.href).split('/')[4];
+
+    gameData.dialogueTree.travel.success.options.push({
+        text: 'Continue.',
+        pageRedirect: '/' + travelTo
+    });
+
+    const enemy = ['bandit', 'rat', 'zombie', 'spider'].randomItem();
+    gameData.dialogueTree.travel.attacked.options.push({
+        text: 'Continue to battle.',
+        pageRedirect: '/battle/' + enemy
+    });
+
+    document.getElementById('current-location').innerHTML = 'Travel > ' + gameData.currentTown + ' > to > ' + gameData.travelToTown;
+
+    writeLine('You pay to take a ride to ' + travelTo + ' from ' + currentTown + '.', () => {
+        if (Math.random() <= 1) writeDialogue('success');
+        else writeDialogue('attacked');
+    }, 'white');
+</script>
+</html>
