@@ -17,7 +17,8 @@ function post(data, callback) {
 }
 
 var { dialogueTree, world, currentGold, port } = gameData;
-var postUrl = (port == 3000) ? 'http://localhost:3000' : 'https://sleepy-peak-05201.herokuapp.com/';
+//var postUrl = (port == 3000) ? 'http://localhost:3000' : 'https://sleepy-peak-05201.herokuapp.com/';
+var postUrl = window.location.protocol + '//' + window.location.host;
 
 var currentTown = decodeURI(window.location.href).split('/')[3];
 var town = world.towns.find(t => t.name == currentTown);
