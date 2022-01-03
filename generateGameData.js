@@ -67,6 +67,12 @@ const generateGameData = function(port) {
                                 action: 'addGold',
                                 data: 1000
                             }
+                        },
+                        {
+                            text: 'Leave (Sign Out)',
+                            action: {
+                                action: 'logout'
+                            }
                         }
                     ]
                 },

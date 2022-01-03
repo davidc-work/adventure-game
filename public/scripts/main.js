@@ -51,6 +51,15 @@ function parseForVars(line) {
     return line;
 }
 
+function deleteCookie( name, path, domain ) {
+    if( getCookie( name ) ) {
+      document.cookie = name + "=" +
+        ((path) ? ";path="+path:"")+
+        ((domain)?";domain="+domain:"") +
+        ";expires=Thu, 01 Jan 1970 00:00:01 GMT";
+    }
+  }
+
 function handleAction(a) {
     switch(a.action) {
         case 'addGold':
@@ -63,6 +72,10 @@ function handleAction(a) {
             a.lines.forEach(l => {
                 writeLine(l, undefined, 'white');
             });
+            break;
+        case 'logout':
+            deleteCookie('sessionHash')
+            window.location.href = '/login';
             break;
     }
 }
@@ -114,7 +127,7 @@ function fadeInDialogue(elements, callback = undefined, i = 0) {
 
 function writeDialogue(d) {
     if (d) dialoguePage = d;
-    
+
     const dialogueOptions = {
         main: dialogueTree.main,
         conversation: currentNPC ? currentNPC.dialogueTree : undefined,

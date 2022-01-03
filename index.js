@@ -14,6 +14,61 @@ import Town from './town.js';
 import World from './world.js';
 import Quest from './quest.js';
 import generateGameData from './generateGameData.js';
+import fs from 'fs';
+import crypto from 'crypto';
+import cookieParser from 'cookie-parser';
+
+const accountsPath = 'accounts.json';
+const sessionStrLength = 64;
+
+const defaultCharacter = {
+    inventory: [],
+    quests: [],
+    stats: []
+}
+
+function getAccounts() {
+    let exists = true;
+    try {
+        fs.accessSync(accountsPath);
+    } catch(e) { exists = false; }
+    if (!exists) fs.writeFileSync(accountsPath, '');
+    var rawData = fs.readFileSync(accountsPath);
+    var data = rawData == '' ? [] : JSON.parse(rawData);
+    
+    return data;
+}
+
+function hash(a) {
+    return crypto.createHash('md5').update(a).digest('hex')
+}
+
+function generateSessionString() {
+    return new Array(64).fill(undefined).map(c => String.fromCharCode(65 + Math.floor(Math.random() * 57))).join('');
+}
+
+function createAccount(accounts, username, password) {
+    if (accounts.find(a => a.username == username)) {
+        return {
+            err: 'Username already taken.'
+        }
+    }
+    accounts.push({
+        username: username,
+        password: hash(password),
+        character: Object.assign({}, defaultCharacter)
+    });
+    var stringified = JSON.stringify(accounts);
+    return fs.writeFileSync(accountsPath, stringified);
+}
+
+function findAccount(username, password) {
+    var a = accounts.find(a => a.password == password);
+    if (!a) return undefined;
+    return (a.username == username) ? a : undefined;
+}
+
+var accounts = getAccounts();
 
 const app = express();
 const jsonParser = bodyParser.json();
@@ -26,6 +81,7 @@ const __dirname = path.resolve();
 app.use(express.static(__dirname + '/public'));
 app.use(express.urlencoded({extended: true}));
 app.use(express.json());
+app.use(cookieParser());
 
 var game = {
     gameData: generateGameData(port)
@@ -91,9 +147,33 @@ app.get('/signup', (req, res) => {
 
 app.post("/signedup", (req,res) => {
     const user = req.body.username;
-    res.render('signedup', {
-        user: user
-    });
+    const password = req.body.password;
+    var status = createAccount(accounts, user, password);
+    if (status) {
+        res.redirect('/signup');
+    } else {
+        res.render('signedup', {
+            user: user
+        });
+    }
+});
+
+app.get('/login', (req, res) => {
+    res.render('login', game);
+});
+
+app.post("/loggedin", (req,res) => {
+    const user = req.body.username;
+    const password = req.body.password;
+    const hashPassword = hash(password);
+    var account = findAccount(user, hashPassword);
+    if (account) {
+        res.render('loggedin', {
+            user: user,
+            password: hashPassword
+        });
+    } else res.redirect('/login');
+
 });
 
 app.get('/map', (req, res) => {
@@ -125,6 +205,7 @@ app.get('/travel/:town', (req, res) => {
 });
 
 app.get('/:town', (req, res) => {
+    console.log(req.cookies);
     var town = req.params.town;
     if (findTown(town) == undefined) {
         res.redirect('/');

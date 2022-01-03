@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sign Up</title>
+    <title>Log In</title>
     <style>
         body, html {
             background-color: black;
@@ -61,23 +61,23 @@
             border: 3px solid white;
         }
 
-        #log-in {
+        #sign-up {
             width: 100%;
             display: block;
             text-align: center;
         }
 
-        #log-in > * {
+        #sign-up > * {
             display: inline;
             margin: 0;
             position: static;
         }
 
-        #log-in > p {
+        #sign-up > p {
             font-size: 12px;
         }
 
-        #log-in > a {
+        #sign-up > a {
             font-size: 12px;
             text-decoration: underline;
             color: white;
@@ -85,12 +85,12 @@
     </style>
 </head>
 <body>
-    <form action="/signedup" method="POST">
-        <p>Sign Up</p>
+    <form action="/loggedin" method="POST">
+        <p>Log In</p>
         <input id="username" type="text" name="username" placeholder="Username" />
         <input id="password" type="password" name="password" placeholder="Password" />
-        <input type="submit" value="Sign Up" onclick="check(event)" />
-        <span id="log-in"><p>Already have an account? </p><a href="/login">Log In</a></span>
+        <input type="submit" value="Log In" onclick="check(event)" />
+        <span id="sign-up"><p>Don't have an account? </p><a href="/signup">Sign Up</a></span>
     </form>
 </body>
 <script>
