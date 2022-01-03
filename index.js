@@ -24,6 +24,8 @@ app.set('view engine', 'ejs');
 
 const __dirname = path.resolve();
 app.use(express.static(__dirname + '/public'));
+app.use(express.urlencoded({extended: true}));
+app.use(express.json());
 
 var game = {
     gameData: generateGameData(port)
@@ -81,6 +83,17 @@ function stringifiedGameData() {
 app.get('/', (req, res) => {
     //res.redirect('/' + gd.eventVars.firstNPCMeetTown + '/talk/' + gd.eventVars.firstNPCMeet);
     res.render('startPage', game);
+});
+
+app.get('/signup', (req, res) => {
+    res.render('signup', game);
+});
+
+app.post("/signedup", (req,res) => {
+    const user = req.body.username;
+    res.render('signedup', {
+        user: user
+    });
 });
 
 app.get('/map', (req, res) => {

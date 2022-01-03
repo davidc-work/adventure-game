@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up</title>
+    <style>
+        body, html {
+            background-color: black;
+            color: white;
+            font-family: system-ui;
+        }
+
+        input, p {
+            display: block;
+            position: relative;
+            left: 50%;
+            transform: translateX(-50%);
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+
+        input {
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        p {
+            color: white;
+            text-align: center;
+        }
+
+        form {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            padding: 50px;
+            background-color: #1e1e1e;
+            border-radius: 20px;
+            box-shadow: 0 0 5px #626262;
+        }
+    </style>
+</head>
+<body>
+    <form action="/signedup" method="POST">
+        <p>Sign Up</p>
+        <input type="text" name="username" placeholder="Username" />
+        <input type="password" name="password" placeholder="Password" />
+        <input type="submit" value="Sign Up" />
+    </form>
+</body>
+</html>
