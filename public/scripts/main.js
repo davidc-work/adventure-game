@@ -80,7 +80,7 @@ function handleAction(a) {
             });
             break;
         case 'logout':
-            deleteCookie('sessionHash')
+            deleteCookie('sessionId')
             window.location.href = '/login';
             break;
     }

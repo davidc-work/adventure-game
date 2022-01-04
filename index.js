@@ -17,9 +17,17 @@ import generateGameData from './generateGameData.js';
 import fs from 'fs';
 import crypto from 'crypto';
 import cookieParser from 'cookie-parser';
+import AWS from 'aws-sdk';
 
-const accountsPath = 'accounts.json';
-const sessionStrLength = 64;
+let awsConfig = {
+    region: 'us-east-1',
+    endpoint: 'http://dynamodb.us-east-1.amazonaws.com',
+    accessKeyId: 'AKIA6FVBI5RPXS2L43BR',
+    secretAccessKey: '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'
+}
+AWS.config.update(awsConfig);
+
+let docClient = new AWS.DynamoDB.DocumentClient();
 
 const defaultCharacter = {
     inventory: [],
@@ -27,53 +35,98 @@ const defaultCharacter = {
     stats: []
 }
 
-function getAccounts() {
-    let exists = true;
-    try {
-        fs.accessSync(accountsPath);
-    } catch(e) { exists = false; }
-    if (!exists) fs.writeFileSync(accountsPath, '');
-    var rawData = fs.readFileSync(accountsPath);
-    var data = rawData == '' ? [] : JSON.parse(rawData);
-    
-    return data;
-}
-
 function hash(a) {
     return crypto.createHash('md5').update(a).digest('hex')
 }
 
-function createAccount(accounts, username, password) {
-    if (accounts.find(a => a.username == username)) {
-        return {
-            err: 'Username already taken.'
-        }
+function sessionId() {
+    return Math.random().toString(36).slice(2, 9);
+}
+
+function getAllAccounts(callback) {
+    var params = {
+        TableName: 'adventure_game_accounts'
     }
-    accounts.push({
-        username: username,
-        password: hash(password),
-        character: Object.assign({}, defaultCharacter)
+
+    docClient.scan(params, (err, data) => {
+        if (err) console.error(err);
+        return err ? callback(false) : callback(data);
     });
-    var stringified = JSON.stringify(accounts);
-    return fs.writeFileSync(accountsPath, stringified);
 }
 
-function findAccount(username, password) {
-    var a = findAccountFromHash(password);
-    if (!a) return undefined;
-    return (a.username == username) ? a : undefined;
+function getAccount(username, password) {
+    if (!accounts) {
+        console.error('Accounts undefined.');
+        return false;
+    }
+    
+    var acc = accounts.find(a => a.username == username);
+    if (acc) {
+        if (password) {
+            return acc.password == password ? acc : undefined;
+        } else return acc;
+    } else return undefined;
 }
 
-function findAccountFromHash(hash) {
-    if (hash == undefined) return undefined;
-    return accounts.find(a => a.password == hash);
+let accounts;
+getAllAccounts(data => {
+    accounts = data ? data.Items : undefined;
+    console.log(accounts);
+});
+
+var CUSTOMEPOCH = 1300000000000; // artificial epoch
+function generateRowId(shardId /* range 0-64 for shard/slot */) {
+  var ts = new Date().getTime() - CUSTOMEPOCH; // limit to recent
+  var randid = Math.floor(Math.random() * 512);
+  ts = (ts * 64);   // bit-shift << 6
+  ts = ts + shardId;
+  return (ts * 512) + randid;
 }
 
-var accounts = getAccounts();
+function createAccount(accounts, username, password, callback) {
+    if (!accounts) {
+        callback(false);
+        return console.error('Accounts undefined.');
+    }
+    
+    var acc = getAccount(username);
+    if (acc) {
+        console.error('account exists');
+        callback(false);
+        return ;
+    }
+    
+    password = hash(password);
+    var input = {
+        user_id: generateRowId(4),
+        username: username,
+        password: password,
+        sessionId: sessionId()
+    }
+
+    var params = {
+        TableName: 'adventure_game_accounts',
+        Item: input
+    }
+
+    docClient.put(params, (err, data) => {
+        if (err) {
+            console.error(err);
+            callback(false);
+        }
+        else {
+            accounts.push({
+                username: username,
+                password: password,
+                character: Object.assign({}, defaultCharacter)
+            });
+            callback(true);
+        }
+    });
+}
 
 const app = express();
 const jsonParser = bodyParser.json();
-const urlencodedParser = bodyParser.urlencoded({ extended: false});
 const port = process.env.PORT || 3000;
 
 app.set('view engine', 'ejs');
@@ -128,62 +181,77 @@ function findShop(ownerName, townName) {
     return town.shops.find(s => s.owner.fullName == ownerName);
 }
 
-function getAccount(req, res, redirect = true) {
+/*function getAccount(req, res, redirect = true) {
+    return redirect;
     var acc = findAccountFromHash(req.cookies.sessionHash);
     if (!acc && redirect) res.redirect('/login');
     else return acc;
+}*/
+
+function inAppHandler(req, res, next) {
+    if (req.cookies.sessionId) {
+        var acc = accounts.find(a => a.sessionId == req.cookies.sessionId);
+        if (acc) {
+            next();
+            return ;
+        }
+    }
+    res.redirect('/login');
 }
 
-app.get('/', (req, res) => {
-    var acc = getAccount(req, res);
-    if (!acc) return ;
+function outsideAppHandler(req, res, next) {
+    if (req.cookies.sessionId) {
+        var acc = accounts.find(a => a.sessionId == req.cookies.sessionId);
+        if (!acc) {
+            next();
+            return ;
+        }
+        res.redirect('/');
+    }
+    next();
+}
 
+app.get('/', inAppHandler, (req, res) => {
     res.render('startPage', game);
 });
 
-app.get('/signup', (req, res) => {
-    if (getAccount(req, res, false)) return res.redirect('/');
-    else res.render('signup', game);
+app.get('/signup', outsideAppHandler, (req, res) => {
+    res.render('signup', game);
 });
 
-app.post("/signedup", (req,res) => {
-    if (getAccount(req, res, false)) return res.redirect('/');
+app.post("/signedup", outsideAppHandler, (req,res) => {
     const user = req.body.username;
     const password = req.body.password;
-    var status = createAccount(accounts, user, password);
-    if (status) {
-        res.redirect('/signup');
-    } else {
-        res.render('signedup', {
-            user: user
-        });
-    }
+    createAccount(accounts, user, password, success => {
+        if (success) {
+            res.render('signedup', {
+                user: user
+            });
+        } else {
+            res.redirect('/signup');
+        }
+    });
 });
 
-app.get('/login', (req, res) => {
-    if (getAccount(req, res, false)) return res.redirect('/');
+app.get('/login', outsideAppHandler, (req, res) => {
     res.render('login', game);
 });
 
-app.post("/loggedin", (req,res) => {
-    if (getAccount(req, res, false)) return res.redirect('/');
+app.post("/loggedin", outsideAppHandler, (req,res) => {
     const user = req.body.username;
     const password = req.body.password;
     const hashPassword = hash(password);
-    var account = findAccount(user, hashPassword);
+    var account = getAccount(user, hashPassword);
     if (account) {
         res.render('loggedin', {
             user: user,
-            password: hashPassword
+            sessionId: account.sessionId
         });
     } else res.redirect('/login');
 
 });
 
-app.get('/map', (req, res) => {
-    var acc = getAccount(req, res);
-    if (!acc) return ;
-
+app.get('/map', inAppHandler, (req, res) => {
     if (gd.currentTown) res.render('map', game);
     else res.redirect('/');
 });
@@ -192,14 +260,7 @@ app.get('/travel', (req, res) => res.redirect('/'));
 
 app.get('/battle', (req, res) => res.redirect('/'));
 
-/*app.get('/restart', function (req, res, next) {
-    process.exit(1);
-});*/
-
-app.get('/battle/:enemy', (req, res) => {
-    var acc = getAccount(req, res);
-    if (!acc) return ;
-
+app.get('/battle/:enemy', inAppHandler, (req, res) => {
     if (gd.currentTown && gd.travelToTown) {
         gd.inBattle = true;
         gd.currentEnemy = req.params.enemy;
@@ -207,20 +268,14 @@ app.get('/battle/:enemy', (req, res) => {
     } else res.redirect('/');
 });
 
-app.get('/travel/:town', (req, res) => {
-    var acc = getAccount(req, res);
-    if (!acc) return ;
-
+app.get('/travel/:town', inAppHandler, (req, res) => {
     if (gd.currentTown) {
         gd.travelToTown = req.params.town;
         res.render('travel', game);
     } else res.redirect('/');
 });
 
-app.get('/:town', (req, res) => {
-    var acc = getAccount(req, res);
-    if (!acc) return ;
-
+app.get('/:town', inAppHandler, (req, res) => {
     var town = req.params.town;
     if (findTown(town) == undefined) {
         res.redirect('/');
@@ -230,12 +285,9 @@ app.get('/:town', (req, res) => {
     }
 });
 
-app.get('/:town/talk', (req, res) => res.redirect('/'));
+app.get('/:town/talk', inAppHandler, (req, res) => res.redirect('/'));
 
-app.get('/:town/talk/:npc', (req, res) => {
-    var acc = getAccount(req, res);
-    if (!acc) return ;
-
+app.get('/:town/talk/:npc', inAppHandler, (req, res) => {
     var townName = req.params.town, npcName = req.params.npc;
     if (findNPC(npcName, townName) == undefined) res.redirect('/');
     else {
@@ -244,10 +296,7 @@ app.get('/:town/talk/:npc', (req, res) => {
     }
 });
 
-app.get('/:town/shop/:owner', (req, res) => {
-    var acc = getAccount(req, res);
-    if (!acc) return ;
-
+app.get('/:town/shop/:owner', inAppHandler, (req, res) => {
     var townName = req.params.town, ownerName = req.params.owner;
     if (findShop(ownerName, townName) == undefined) res.redirect('/');
     else {
@@ -257,8 +306,11 @@ app.get('/:town/shop/:owner', (req, res) => {
 });
 
 app.post('/', jsonParser, (req, res) => {
-    var acc = getAccount(req, res);
-    if (!acc) return ;
+    var acc = accounts.find(a => a.sessionId == req.cookies.sessionId);
+    if (!acc) {
+        res.redirect('/login');
+        return ;
+    }
 
     var cmd = req.body.data;
     switch(cmd.action) {

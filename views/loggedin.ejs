@@ -18,14 +18,15 @@
     </style>
 </head>
 <body>
-    <p>Welcome, <%-user%></p>
+    <!--<p>Welcome, <%-user%></p>
     <p id="display">You will be redirected in 5 seconds...</p>
-    <a href="/">Click here to go now.</a>
+    <a href="/">Click here to go now.</a>-->
 </body>
 <script>
-    var password = <%-JSON.stringify(password)%>
-    document.cookie = 'sessionHash=' + password;
-    var x = 4;
+    var sessionId = <%-JSON.stringify(sessionId)%>
+    document.cookie = 'sessionId=' + sessionId;
+    window.location.href = '/';
+    /*var x = 4;
     var interval = setInterval(() => {
         if (x == 0) {
             window.location.href = '/';
@@ -33,6 +34,6 @@
         }
         document.getElementById('display').innerHTML = 'You will be redirected in ' + x + ' seconds...';
         x--;
-    }, 1000);
+    }, 1000);*/
 </script>
 </html>
