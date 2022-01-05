@@ -85,10 +85,14 @@ function getAccount(username, password) {
 }
 
 let accounts;
-getAllAccounts(data => {
-    accounts = data ? data.Items : undefined;
-    console.log(accounts);
-});
+
+function updateAccounts() {
+    getAllAccounts(data => {
+        accounts = data ? data.Items : undefined;
+    });
+}
+updateAccounts();
+//setInterval(updateAccounts, 10000);
 
 var CUSTOMEPOCH = 1300000000000; // artificial epoch
 function generateRowId(shardId /* range 0-64 for shard/slot */) {
@@ -111,13 +115,15 @@ function createAccount(accounts, username, password, callback) {
         callback(false);
         return ;
     }
+
+    var sesId = sessionId();
     
     password = hash(password);
     var input = {
         user_id: generateRowId(4),
         username: username,
         password: password,
-        sessionId: sessionId()
+        sessionId: sesId
     }
 
     var params = {
@@ -134,7 +140,8 @@ function createAccount(accounts, username, password, callback) {
             accounts.push({
                 username: username,
                 password: password,
-                character: Object.assign({}, defaultCharacter)
+                character: Object.assign({}, defaultCharacter),
+                sessionId: sesId
             });
             callback(true);
         }
