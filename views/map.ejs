@@ -40,6 +40,7 @@
     mapContainerElement.onmousedown = () => grabbingMap = true;
     document.body.onmouseup = e => {
         grabbingMap = false;
+        if (animationFrame) cancelAnimationFrame(animationFrame);
         var mapX = parseInt(mapElement.style.left.slice(0, -2), 10);
         var mapY = parseInt(mapElement.style.top.slice(0, -2), 10);
         if (new Date() - lastTime > 100) {
@@ -92,35 +93,56 @@
     }
     document.body.onmousemove = onMouseMove;
 
+    function zoomIn(left, top, zoom, dx, dy, z, v) {
+        if (v < 0.001) return ;
+
+        left += dx * v;
+        top += dy * v;
+        zoom -= z * v;
+
+        zoom = Math.min(400, Math.max(100, zoom));
+
+        mapElement.style.width = zoom + '%';
+        mapElement.style.height = zoom + '%';
+
+        mapElement.style.left = left + 'px';
+        mapElement.style.top = top + 'px';
+
+        if (zoom == 400) return ;
+
+        clip();
+        animationFrame = requestAnimationFrame(() => zoomIn(left, top, zoom, dx, dy, z, v * 0.9));
+    }
+
     const onWheel = e => {
         const scrollAmount = 4;
         let sign = Math.sign(e.deltaY);
-        let prev = mapElement.style.width;
-        var s = mapElement.style.width.slice(0, -1);
         var scroll = sign * 100;
-        var n = Math.min(400, Math.max(100, s - scroll / scrollAmount));
-        mapElement.style.width = n + '%';
-        mapElement.style.height = n + '%';
-
-        if (mapElement.style.width == prev) return ;
+        var dz = scroll / scrollAmount;
         
         var rect = mapContainerElement.getBoundingClientRect();
         var x = e.clientX - rect.left;
         var y = e.clientY - rect.top;
         
+        var dx = sign * x / scrollAmount;
+        var dy = sign * y / scrollAmount;
+        
+        if (animationFrame) {
+            cancelAnimationFrame(animationFrame);
+            animationFrame = undefined;
+        }
+
         var l = parseInt(mapElement.style.left.slice(0, -2), 10);
         var t = parseInt(mapElement.style.top.slice(0, -2), 10);
         if (isNaN(l)) {
             l = 0, t = 0;
         }
-        mapElement.style.left = (l + sign * x / scrollAmount) + 'px';
-        mapElement.style.top = (t + sign * y / scrollAmount) + 'px';
 
-        clip();
-        if (animationFrame) {
-            cancelAnimationFrame(animationFrame);
-            animationFrame = undefined;
-        }
+        var w = mapElement.style.width || '100%';
+        var z = parseFloat(w.slice(0, -1), 10);
+        if (w == '400%' && dz < 0) return ;
+
+        zoomIn(l, t, z, dx, dy, dz, 0.3);
     }
     mapContainerElement.onwheel = onWheel;
 
